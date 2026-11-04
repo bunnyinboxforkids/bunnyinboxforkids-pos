@@ -10,172 +10,140 @@
 <style>
 :root{--brown:#6b4937;--cream:#fbf7f1;--ink:#30251f;--muted:#786e67;--line:#e8ded4;--green:#28734b;--red:#a33b36}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-header{background:var(--brown);color:white;padding:22px 18px 18px}header h1{font-size:20px;margin:0 0 4px}header p{margin:0;color:#f1e7df;font-size:13px}
-main{max-width:760px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;overflow:auto;margin:0 0 14px}
+header{background:var(--brown);color:white;padding:22px 18px 18px}header h1{font-size:20px;margin:0 0 4px}header p{margin:0;color:#f1e7df;font-size:13px}.status{font-size:12px;color:#f1e7df;margin-top:7px}
+main{max-width:900px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;overflow:auto;margin:0 0 14px}
 .tabs button,.btn{border:0;border-radius:12px;padding:11px 14px;background:#eadfd5;color:var(--brown);font-weight:650;white-space:nowrap}
 .tabs button.active,.btn.primary{background:var(--brown);color:white}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #49301a0a}
-h2{font-size:17px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+h2{font-size:17px;margin:0 0 12px}h3{font-size:15px;margin:16px 0 8px}.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .metric{background:#f8f3ed;padding:13px;border-radius:12px}.metric small{display:block;color:var(--muted);font-size:12px}.metric strong{font-size:19px;display:block;margin-top:5px}
-label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}input,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;background:white;color:var(--ink)}
-button{cursor:pointer}.btn{margin-top:10px}.btn.full{width:100%}.btn.secondary{background:#f2ece5;color:var(--brown)}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;background:white;color:var(--ink)}
+button{cursor:pointer}.btn{margin-top:10px}.btn.full{width:100%}.btn.secondary{background:#f2ece5;color:var(--brown)}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1;min-width:0}
 #reader{width:100%;overflow:hidden;border-radius:12px}.hidden{display:none!important}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:10px 6px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:600;font-size:12px}
 .pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#e8f2eb;color:var(--green);font-size:11px}
 .notice{background:#fff6e6;border:1px solid #f0dfbd;color:#70552a;padding:11px;border-radius:11px;font-size:12px;line-height:1.45}
 .sale{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.sale:last-child{border:0}
-footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}
-.status{font-size:12px;color:#f1e7df;margin-top:7px}.login{max-width:440px;margin:30px auto}.login .panel{padding:20px}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}.login{max-width:440px;margin:30px auto}.login .panel{padding:20px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{flex:1}.table-wrap{overflow:auto}.danger{color:var(--red)}.small{font-size:11px}
+.hour-chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px;align-items:end;height:150px;margin:16px 0 4px}.hour-col{display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:5px;min-width:0}.hour-bar{width:100%;max-width:22px;min-height:2px;background:#8b6249;border-radius:5px 5px 0 0}.hour-label{font-size:10px;color:var(--muted)}.hour-value{font-size:9px;color:var(--muted);white-space:nowrap;transform:rotate(-45deg);height:13px}.chart-legend{font-size:12px;color:var(--muted)}
 @media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
-<header><h1>Bunnyinboxforkids</h1><p>Mobile POS · Up & Down Set · Inventory & Sales</p><div class="status" id="connection">Connecting…</div></header>
+<header><h1>Bunnyinboxforkids</h1><p>Mobile POS · Inventory, Sales & Business Expenses</p><div class="status" id="connection">Connecting…</div></header>
 <main>
-<section id="login-screen" class="login">
- <div class="panel"><h2>Administrator login</h2><p class="muted">Sign in to access your business stock and sales records from this or another phone.</p>
- <label>Email address</label><input id="email" type="email" autocomplete="username" placeholder="Your administrator email">
- <label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Your POS password">
- <button class="btn primary full" id="login-btn">Sign in</button><p class="muted" id="login-message"></p>
- </div>
-</section>
+<section id="login-screen" class="login"><div class="panel"><h2>Administrator login</h2><p class="muted">Sign in to access your business records from this or another phone.</p>
+<label>Email address</label><input id="email" type="email" autocomplete="username" placeholder="Administrator email">
+<label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="POS password">
+<button class="btn primary full" id="login-btn">Sign in</button><p class="muted" id="login-message"></p></div></section>
 <section id="app-screen" class="hidden">
- <div class="row" style="margin-bottom:12px"><span class="muted" id="signed-in"></span><button class="btn secondary" id="refresh">Refresh cloud</button><button class="btn secondary" id="logout">Sign out</button></div>
- <div class="notice" id="migration-note" style="margin-bottom:14px">Your records are stored securely in your business cloud account. Keep your phone connected to the internet while using the POS.</div>
- <nav class="tabs">
- <button class="active" data-tab="dashboard">Dashboard</button><button data-tab="sell">Record sale</button><button data-tab="stock">Stock</button><button data-tab="history">Sales history</button>
- </nav>
- <section id="dashboard" class="tab">
-  <div class="grid">
-   <div class="metric"><small>Pieces in stock</small><strong id="m-stock">0</strong></div>
-   <div class="metric"><small>Sales revenue</small><strong id="m-revenue">₦0</strong></div>
-   <div class="metric"><small>Gross profit</small><strong id="m-profit">₦0</strong></div>
-   <div class="metric"><small>Pieces sold</small><strong id="m-sold">0</strong></div>
-  </div>
-  <div class="panel" style="margin-top:14px"><h2>Product</h2><b>Up & Down Set</b><p class="muted">Age 3 months–1 year · Selling price ₦6,000 · Production cost ₦2,900</p><p><span class="pill">Gross profit per piece: ₦3,100</span></p></div>
-  <div class="panel"><h2>Stock by colour</h2><div id="dash-stock"></div></div>
-  <button class="btn secondary full" id="export">Export sales CSV</button>
-  <button class="btn secondary full" id="backup">Download full POS backup (JSON)</button>
- </section>
- <section id="sell" class="tab hidden">
-  <div class="panel"><h2>Scan product barcode</h2><p class="muted">Use the camera to scan a label, or type the barcode printed below it.</p>
-   <div id="reader"></div><button class="btn primary full" id="start-scan">Start camera scanner</button><button class="btn secondary full hidden" id="stop-scan">Stop scanner</button>
-   <label for="barcode">Barcode / product code</label><input id="barcode" placeholder="e.g. BIF-UD-RED" autocapitalize="characters">
-   <button class="btn secondary full" id="lookup">Find product</button>
-   <div id="found" class="hidden"><div class="panel" style="background:#fbf7f1;margin:14px 0 0"><b id="found-name">Up & Down Set</b><p class="muted" id="found-detail"></p>
-    <div class="row"><div><label>Quantity sold</label><input id="qty" type="number" min="1" value="1"></div><div><label>Payment method</label><select id="payment"><option>Cash</option><option>Transfer</option><option>Card</option><option>Other</option></select></div></div>
-    <p><b id="sale-total">₦6,000</b> <span class="muted">sale total</span></p><button class="btn primary full" id="complete">Complete sale</button>
-   </div></div><p class="muted" id="scan-message"></p>
-  </div>
- </section>
- <section id="stock" class="tab">
-  <div class="panel"><h2>Current stock</h2><p class="muted">Sales reduce stock automatically. Stock changes are saved to your cloud account.</p><div id="stock-table"></div></div>
-  <div class="panel"><h2>Adjust stock</h2><label>Colour</label><select id="adjust-colour"></select><label>New physical stock count</label><input id="adjust-qty" type="number" min="0"><button class="btn primary full" id="save-adjust">Save stock count</button></div>
- </section>
- <section id="history" class="tab"><div class="panel"><h2>Sales history</h2><div id="sales-list" class="muted">No sales recorded yet.</div></div></section>
- <footer>Bunnyinboxforkids Mobile POS · Cloud version</footer>
+<div class="row" style="margin-bottom:12px"><span class="muted" id="signed-in"></span><button class="btn secondary" id="refresh">Refresh cloud</button><button class="btn secondary" id="logout">Sign out</button></div>
+<div class="notice" id="migration-note" style="margin-bottom:14px">Your business records are stored in your cloud account. Keep your phone connected to the internet.</div>
+<nav class="tabs">
+<button class="active" data-tab="dashboard">Dashboard</button><button data-tab="sell">Record sale</button><button data-tab="stock">Stock</button><button data-tab="products">Products / Import</button><button data-tab="expenses">Expenses</button><button data-tab="history">Sales history</button><button data-tab="reports">Reports</button>
+</nav>
+<section id="dashboard" class="tab">
+<div class="grid">
+<div class="metric"><small>Pieces in stock</small><strong id="m-stock">0</strong></div>
+<div class="metric"><small>Sales revenue</small><strong id="m-revenue">₦0</strong></div>
+<div class="metric"><small>Gross profit</small><strong id="m-profit">₦0</strong></div>
+<div class="metric"><small>Pieces sold</small><strong id="m-sold">0</strong></div>
+<div class="metric"><small>Business expenses</small><strong id="m-expenses">₦0</strong></div>
+<div class="metric"><small>Net profit</small><strong id="m-net">₦0</strong></div>
+</div>
+<div class="panel" style="margin-top:14px"><h2>Inventory by product</h2><div id="dash-products"></div></div>
+<div class="panel"><h2>Today at a glance</h2><div id="today-summary" class="muted"></div></div>
+<div class="panel"><h2>Hourly sales activity</h2><p class="muted">Sales revenue recorded by hour in Nigeria time (WAT).</p><div id="hourly-chart" class="hour-chart" aria-label="Hourly sales activity chart"></div><div class="chart-legend">Each bar represents sales revenue for that hour. Empty hours mean no sale was recorded.</div></div>
+<div class="actions"><button class="btn secondary" id="export">Export sales CSV</button><button class="btn secondary" id="backup">Download full POS backup (JSON)</button></div>
 </section>
-</main>
+<section id="sell" class="tab hidden"><div class="panel"><h2>Scan product barcode</h2><p class="muted">Scan the printed label or type its product code.</p>
+<div id="reader"></div><button class="btn primary full" id="start-scan">Start camera scanner</button><button class="btn secondary full hidden" id="stop-scan">Stop scanner</button>
+<label>Barcode / product code</label><input id="barcode" placeholder="e.g. BIF-UD2-YEL" autocapitalize="characters"><button class="btn secondary full" id="lookup">Find product</button>
+<div id="found" class="hidden"><div class="panel" style="background:#fbf7f1;margin:14px 0 0"><b id="found-name"></b><p class="muted" id="found-detail"></p>
+<div class="row"><div><label>Quantity sold</label><input id="qty" type="number" min="1" value="1"></div><div><label>Payment method</label><select id="payment"><option>Cash</option><option>Transfer</option><option>Card</option><option>Other</option></select></div></div>
+<p><b id="sale-total">₦0</b> <span class="muted">sale total</span></p><button class="btn primary full" id="complete">Complete sale</button></div></div><p class="muted" id="scan-message"></p></div></section>
+<section id="stock" class="tab hidden"><div class="panel"><h2>Current stock</h2><p class="muted">Sales reduce stock automatically. Stock changes are saved to your cloud account.</p><div class="table-wrap" id="stock-table"></div></div>
+<div class="panel"><h2>Adjust stock</h2><label>Product / colour / size</label><select id="adjust-code"></select><label>New physical stock count</label><input id="adjust-qty" type="number" min="0"><button class="btn primary full" id="save-adjust">Save stock count</button></div></section>
+<section id="products" class="tab hidden">
+<div class="panel"><h2>Add a product / colour variation</h2><p class="muted">Add one colour at a time. Use the same product name and size for its other colours. Every barcode must be unique.</p>
+<label>Product name</label><input id="p-name" placeholder="e.g. Up and down set">
+<div class="row"><div><label>Size</label><input id="p-size" placeholder="e.g. 2 years"></div><div><label>Colour</label><input id="p-colour" placeholder="e.g. Yellow"></div></div>
+<label>Barcode / product code</label><input id="p-code" placeholder="e.g. BIF-UD2-YEL">
+<div class="row"><div><label>Opening stock quantity</label><input id="p-qty" type="number" min="0" value="0"></div><div><label>Selling price (₦)</label><input id="p-price" type="number" min="0" value="6000"></div></div>
+<label>Production cost per piece (₦)</label><input id="p-cost" type="number" min="0" value="0">
+<button class="btn primary full" id="add-product">Save product variation</button><p class="muted" id="product-message"></p></div>
+<div class="panel"><h2>Bulk import stock using CSV</h2><p class="muted">Upload the CSV prepared for Product 2. It must contain: barcode, product_name, colour, size_years, opening_stock_qty, selling_price_ngn, production_cost_ngn.</p>
+<label>Select CSV file</label><input id="csv-file" type="file" accept=".csv,text/csv"><button class="btn primary full" id="import-csv">Import CSV to cloud</button><p class="muted" id="import-message"></p>
+<div class="notice">Import updates or adds rows by barcode. It does not delete other products or sales. Review the CSV quantities before importing to avoid overwriting a physical stock count.</div></div></section>
+<section id="expenses" class="tab hidden"><div class="panel"><h2>Record business expense</h2>
+<label>Expense date</label><input id="expense-date" type="date">
+<label>Category</label><select id="expense-category"><option>Fuel</option><option>Transportation</option><option>Packaging</option><option>Electricity</option><option>Marketing</option><option>Maintenance</option><option>Rent</option><option>Other</option></select>
+<label>Amount (₦)</label><input id="expense-amount" type="number" min="1" placeholder="e.g. 5000">
+<label>Description</label><input id="expense-description" placeholder="e.g. Fuel for generator">
+<button class="btn primary full" id="save-expense">Save expense</button><p class="muted" id="expense-message"></p></div>
+<div class="panel"><h2>Recent expenses</h2><div id="expense-list" class="muted"></div></div></section>
+<section id="history" class="tab hidden"><div class="panel"><h2>Sales history</h2><div id="sales-list" class="muted">No sales recorded yet.</div></div></section>
+<section id="reports" class="tab hidden"><div class="panel"><h2>Business reports</h2><p class="muted">Choose a date range. Dates are displayed in Nigeria time (WAT).</p>
+<div class="row"><div><label>From</label><input id="report-from" type="date"></div><div><label>To</label><input id="report-to" type="date"></div></div><button class="btn primary full" id="run-report">Run report</button><div id="report-result" style="margin-top:14px"></div></div></section>
+<footer>Bunnyinboxforkids Mobile POS · Cloud version</footer>
+</section></main>
 <script>
 const SUPABASE_URL="https://phajdfjseqmklxzbqrsi.supabase.co";
 const SUPABASE_KEY="sb_publishable_knTvwis7W-vzRppAgxgDRg_Vh4DIhlx";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const initial=[
- {colour:"Red",code:"BIF-UD-RED",qty:24},{colour:"Baby Pink",code:"BIF-UD-BPK",qty:18},
- {colour:"Purple",code:"BIF-UD-PUR",qty:39},{colour:"Brown",code:"BIF-UD-BRN",qty:28},
- {colour:"Yellow",code:"BIF-UD-YEL",qty:28},{colour:"Dove Grey",code:"BIF-UD-DGR",qty:15}
-];
-const PRICE=6000,COST=2900,KEY="bif_mobile_pos_v1";
-let data;
-try{data=JSON.parse(localStorage.getItem(KEY))||{stock:initial.map(x=>({...x})),sales:[]}}catch(e){data={stock:initial.map(x=>({...x})),sales:[]}}
-if(!Array.isArray(data.stock)||!Array.isArray(data.sales))data={stock:initial.map(x=>({...x})),sales:[]};
-function persistLocal(){localStorage.setItem(KEY,JSON.stringify(data))}
-function money(n){return "₦"+Number(n||0).toLocaleString("en-NG")}
-function totalStock(){return data.stock.reduce((a,x)=>a+Number(x.qty||0),0)}
-function uuid(){return crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)})}
-function setStatus(t){document.getElementById("connection").textContent=t}
-function showApp(session){document.getElementById("login-screen").classList.add("hidden");document.getElementById("app-screen").classList.remove("hidden");document.getElementById("signed-in").textContent=session.user.email;setStatus("Connected · Cloud account active")}
-function showLogin(msg=""){document.getElementById("app-screen").classList.add("hidden");document.getElementById("login-screen").classList.remove("hidden");document.getElementById("login-message").textContent=msg;setStatus("Sign in required")}
-async function login(){
- const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
- if(!email||!password){document.getElementById("login-message").textContent="Enter your email and password.";return}
- const b=document.getElementById("login-btn");b.disabled=true;b.textContent="Signing in…";
- const {data:d,error}=await db.auth.signInWithPassword({email,password});
- b.disabled=false;b.textContent="Sign in";
- if(error){document.getElementById("login-message").textContent=error.message;return}
- await loadCloud(d.session);
-}
+const OLD_KEY="bif_mobile_pos_v1";
+const initial=[{product_name:"Up & Down Set",size_label:"3 months–1 year",price:6000,cost:2900,colour:"Red",code:"BIF-UD-RED",qty:24},{product_name:"Up & Down Set",size_label:"3 months–1 year",price:6000,cost:2900,colour:"Baby Pink",code:"BIF-UD-BPK",qty:18},{product_name:"Up & Down Set",size_label:"3 months–1 year",price:6000,cost:2900,colour:"Purple",code:"BIF-UD-PUR",qty:39},{product_name:"Up & Down Set",size_label:"3 months–1 year",price:6000,cost:2900,colour:"Brown",code:"BIF-UD-BRN",qty:28},{product_name:"Up & Down Set",size_label:"3 months–1 year",price:6000,cost:2900,colour:"Yellow",code:"BIF-UD-YEL",qty:28},{product_name:"Up & Down Set",size_label:"3 months–1 year",price:6000,cost:2900,colour:"Dove Grey",code:"BIF-UD-DGR",qty:15}];
+let data={stock:[],sales:[],expenses:[]}, selected=null, scanner=null;
+const $=id=>document.getElementById(id);
+const money=n=>"₦"+Number(n||0).toLocaleString("en-NG");
+const totalStock=()=>data.stock.reduce((a,x)=>a+Number(x.qty||0),0);
+const uuid=()=>crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)});
+const todayWAT=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+const dateWAT=v=>v?new Intl.DateTimeFormat("en-NG",{timeZone:"Africa/Lagos",dateStyle:"medium",timeStyle:"short"}).format(new Date(v)):"";
+function setStatus(t){$("connection").textContent=t}
+function showApp(session){$("login-screen").classList.add("hidden");$("app-screen").classList.remove("hidden");$("signed-in").textContent=session.user.email;setStatus("Connected · Cloud account active")}
+function showLogin(msg=""){$("app-screen").classList.add("hidden");$("login-screen").classList.remove("hidden");$("login-message").textContent=msg;setStatus("Sign in required")}
+async function login(){const email=$("email").value.trim(),password=$("password").value;if(!email||!password){$("login-message").textContent="Enter your email and password.";return}const b=$("login-btn");b.disabled=true;b.textContent="Signing in…";const {data:d,error}=await db.auth.signInWithPassword({email,password});b.disabled=false;b.textContent="Sign in";if(error){$("login-message").textContent=error.message;return}await loadCloud(d.session)}
+function safeText(s){return String(s??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
 function render(){
- const sold=data.sales.reduce((a,s)=>a+Number(s.qty),0),rev=data.sales.reduce((a,s)=>a+Number(s.total),0),profit=data.sales.reduce((a,s)=>a+Number(s.profit),0);
- document.getElementById("m-stock").textContent=totalStock();document.getElementById("m-revenue").textContent=money(rev);document.getElementById("m-profit").textContent=money(profit);document.getElementById("m-sold").textContent=sold;
- document.getElementById("dash-stock").innerHTML=data.stock.map(x=>`<div class="sale"><span>${x.colour}</span><b>${x.qty} pieces</b></div>`).join("");
- document.getElementById("stock-table").innerHTML=`<table><thead><tr><th>Colour</th><th>Barcode</th><th>In stock</th></tr></thead><tbody>${data.stock.map(x=>`<tr><td>${x.colour}</td><td>${x.code}</td><td><b>${x.qty}</b></td></tr>`).join("")}</tbody></table>`;
- document.getElementById("adjust-colour").innerHTML=data.stock.map(x=>`<option value="${x.code}">${x.colour}</option>`).join("");
- document.getElementById("sales-list").innerHTML=data.sales.length?data.sales.slice().sort((a,b)=>new Date(b.at)-new Date(a.at)).map(s=>`<div class="sale"><div><b>${s.colour} · ${s.qty} pc</b><div class="muted">${new Date(s.at).toLocaleString()} · ${s.payment}</div></div><div><b>${money(s.total)}</b><div class="muted">Profit ${money(s.profit)}</div></div></div>`).join(""):"No sales recorded yet.";
-}
-async function migrateLocalIfCloudEmpty(cloudStock,cloudSales){
- const note=document.getElementById("migration-note");
- if(cloudStock.length===0&&cloudSales.length===0){
-  note.textContent="First-time transfer: copying this phone’s saved stock and sales to your cloud account. Please keep this page open and connected to the internet.";
-  data.sales.forEach(s=>{if(!s.id)s.id=uuid()});persistLocal();
-  const stockRows=data.stock.map(x=>({code:x.code,colour:x.colour,qty:Number(x.qty),updated_at:new Date().toISOString()}));
-  const saleRows=data.sales.map(s=>({id:s.id,code:s.code,colour:s.colour,qty:s.qty,price:s.price,cost:s.cost,total:s.total,profit:s.profit,payment:s.payment,at:s.at}));
-  if(stockRows.length){const {error}=await db.from("pos_stock").upsert(stockRows,{onConflict:"code"});if(error)throw error}
-  if(saleRows.length){const {error}=await db.from("pos_sales").upsert(saleRows,{onConflict:"id"});if(error)throw error}
-  note.textContent="Your previous phone records have been transferred to the cloud. Your original local backup has been kept.";
-  return await fetchCloudData();
- }
- note.textContent="Cloud records loaded. This device’s older local records were not uploaded because the cloud already contains records. Your local backup has been left untouched.";
- return {stock:cloudStock,sales:cloudSales};
+ const sold=data.sales.reduce((a,s)=>a+Number(s.qty||0),0),rev=data.sales.reduce((a,s)=>a+Number(s.total||0),0),gp=data.sales.reduce((a,s)=>a+Number(s.profit||0),0),expenses=data.expenses.reduce((a,e)=>a+Number(e.amount||0),0);
+ $("m-stock").textContent=totalStock();$("m-revenue").textContent=money(rev);$("m-profit").textContent=money(gp);$("m-sold").textContent=sold;$("m-expenses").textContent=money(expenses);$("m-net").textContent=money(gp-expenses);
+ const groups={};data.stock.forEach(x=>{const k=(x.product_name||"Product")+" · "+(x.size_label||"Size not set");groups[k]=(groups[k]||0)+Number(x.qty||0)});
+ $("dash-products").innerHTML=Object.keys(groups).length?Object.entries(groups).map(([k,v])=>`<div class="sale"><span>${safeText(k)}</span><b>${v} pieces</b></div>`).join(""):"No products yet.";
+ const t=todayWAT(),ts=data.sales.filter(s=>todayWAT(s.at)===t),te=data.expenses.filter(e=>todayWAT(e.incurred_at)===t);
+ $("today-summary").textContent=`${ts.reduce((a,s)=>a+Number(s.qty),0)} pieces sold · Revenue ${money(ts.reduce((a,s)=>a+Number(s.total),0))} · Expenses ${money(te.reduce((a,e)=>a+Number(e.amount),0))}`;
+ const hourly=Array(24).fill(0);ts.forEach(s=>{const h=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Lagos",hour:"2-digit",hourCycle:"h23"}).format(new Date(s.at)));hourly[h]+=Number(s.total||0)});const maxHour=Math.max(1,...hourly);$("hourly-chart").innerHTML=hourly.map((v,h)=>`<div class="hour-col" title="${String(h).padStart(2,"0")}:00 · ${money(v)}"><div class="hour-bar" style="height:${Math.max(v?3:1,(v/maxHour)*112)}px;opacity:${v?1:.22}"></div><span class="hour-label">${h%3===0?String(h).padStart(2,"0"):""}</span></div>`).join("");
+ $("stock-table").innerHTML=`<table><thead><tr><th>Product / size</th><th>Colour</th><th>Barcode</th><th>Stock</th><th>Price</th></tr></thead><tbody>${data.stock.map(x=>`<tr><td>${safeText(x.product_name)}<br><span class="muted">${safeText(x.size_label)}</span></td><td>${safeText(x.colour)}</td><td>${safeText(x.code)}</td><td><b>${x.qty}</b></td><td>${money(x.price)}</td></tr>`).join("")}</tbody></table>`;
+ $("adjust-code").innerHTML=data.stock.map(x=>`<option value="${safeText(x.code)}">${safeText(x.product_name)} · ${safeText(x.size_label)} · ${safeText(x.colour)} (${safeText(x.code)})</option>`).join("");
+ $("sales-list").innerHTML=data.sales.length?data.sales.slice().sort((a,b)=>new Date(b.at)-new Date(a.at)).map(s=>`<div class="sale"><div><b>${safeText(s.product_name||"Up & Down Set")} · ${safeText(s.colour)} · ${s.qty} pc</b><div class="muted">${safeText(s.size_label||"")} · ${dateWAT(s.at)} · ${safeText(s.payment)}</div></div><div><b>${money(s.total)}</b><div class="muted">Gross profit ${money(s.profit)}</div></div></div>`).join(""):"No sales recorded yet.";
+ $("expense-list").innerHTML=data.expenses.length?data.expenses.slice().sort((a,b)=>new Date(b.incurred_at)-new Date(a.incurred_at)).slice(0,30).map(e=>`<div class="sale"><div><b>${safeText(e.category)} · ${money(e.amount)}</b><div class="muted">${dateWAT(e.incurred_at)} · ${safeText(e.description||"")}</div></div></div>`).join(""):"No expenses recorded yet.";
 }
 async function fetchCloudData(){
- const [sr,ar]=await Promise.all([db.from("pos_stock").select("*"),db.from("pos_sales").select("*").order("at",{ascending:false})]);
- if(sr.error)throw sr.error;if(ar.error)throw ar.error;
- return {stock:sr.data.map(x=>({code:x.code,colour:x.colour,qty:x.qty})),sales:ar.data.map(x=>({...x}))};
+ const [sr,ar,er]=await Promise.all([db.from("pos_stock").select("*"),db.from("pos_sales").select("*").order("at",{ascending:false}),db.from("pos_expenses").select("*").order("incurred_at",{ascending:false})]);
+ if(sr.error)throw sr.error;if(ar.error)throw ar.error;if(er.error)throw er.error;
+ return {stock:sr.data.map(x=>({...x,product_name:x.product_name||"Up & Down Set",size_label:x.size_label||"3 months–1 year",price:Number(x.price??6000),cost:Number(x.cost??2900)})),sales:ar.data.map(x=>({...x,product_name:x.product_name||"Up & Down Set",size_label:x.size_label||"3 months–1 year"})),expenses:er.data||[]};
 }
-async function loadCloud(session){
- try{
-  showApp(session);
-  const [sr,ar]=await Promise.all([db.from("pos_stock").select("*"),db.from("pos_sales").select("*")]);
-  if(sr.error)throw sr.error;if(ar.error)throw ar.error;
-  const result=await migrateLocalIfCloudEmpty(sr.data,ar.data);
-  data=result;
-  // Keep a local working copy as a recovery cache; the cloud remains the main source.
-  persistLocal();render();setStatus("Connected · Cloud records loaded");
- }catch(e){setStatus("Cloud error");alert("Could not load or sync cloud records: "+(e.message||e)+"\nPlease check your internet connection. Your phone’s saved records have not been deleted.");}
-}
-document.getElementById("login-btn").onclick=login;
-document.getElementById("password").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
-document.getElementById("logout").onclick=async()=>{await db.auth.signOut();showLogin()};
-document.getElementById("refresh").onclick=async()=>{const {data:s}=await db.auth.getSession();if(s.session)await loadCloud(s.session)};
+async function loadCloud(session){try{showApp(session);$("migration-note").textContent="Loading your cloud records…";const d=await fetchCloudData();data=d;localStorage.setItem("bif_mobile_pos_v2_cache",JSON.stringify(data));render();$("migration-note").textContent="Cloud records loaded. Your existing records are kept.";setStatus("Connected · Cloud records loaded")}catch(e){setStatus("Cloud error");$("migration-note").textContent="Database setup may be needed before this upgraded version can load. Your existing cloud records have not been deleted.";alert("Could not load upgraded POS: "+(e.message||e))}}
+$("login-btn").onclick=login;$("password").addEventListener("keydown",e=>{if(e.key==="Enter")login()});
+$("logout").onclick=async()=>{await db.auth.signOut();showLogin()};$("refresh").onclick=async()=>{const {data:s}=await db.auth.getSession();if(s.session)await loadCloud(s.session)};
 db.auth.getSession().then(({data:s,error})=>{if(error||!s.session)showLogin();else loadCloud(s.session)});
-document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));document.getElementById(b.dataset.tab).classList.remove("hidden")}));
-let selected=null;
-function findCode(code){selected=data.stock.find(x=>x.code.toUpperCase()===code.trim().toUpperCase());const f=document.getElementById("found");if(!selected){f.classList.add("hidden");document.getElementById("scan-message").textContent="Barcode not found. Check the code or label.";return}document.getElementById("found-name").textContent="Up & Down Set — "+selected.colour;document.getElementById("found-detail").textContent=`Age 3 months–1 year · ${selected.qty} pieces remaining · ${selected.code}`;document.getElementById("qty").value=1;document.getElementById("qty").max=selected.qty;f.classList.remove("hidden");document.getElementById("scan-message").textContent="";updateTotal()}
-function updateTotal(){const q=Math.max(1,Number(document.getElementById("qty").value)||1);document.getElementById("sale-total").textContent=money(q*PRICE)}
-document.getElementById("lookup").onclick=()=>findCode(document.getElementById("barcode").value);
-document.getElementById("qty").oninput=updateTotal;
-document.getElementById("complete").onclick=async()=>{
- if(!selected)return;const q=Number(document.getElementById("qty").value);if(!Number.isInteger(q)||q<1)return alert("Enter a whole number quantity.");if(q>selected.qty)return alert("Not enough stock for this colour.");
- const btn=document.getElementById("complete");btn.disabled=true;btn.textContent="Saving sale…";
- const oldQty=selected.qty;const sale={id:uuid(),code:selected.code,colour:selected.colour,qty:q,price:PRICE,cost:COST,total:q*PRICE,profit:q*(PRICE-COST),payment:document.getElementById("payment").value,at:new Date().toISOString()};
- try{
-  const {error:e1}=await db.from("pos_stock").update({qty:oldQty-q,updated_at:new Date().toISOString()}).eq("code",selected.code);if(e1)throw e1;
-  const {error:e2}=await db.from("pos_sales").insert(sale);
-  if(e2){await db.from("pos_stock").update({qty:oldQty,updated_at:new Date().toISOString()}).eq("code",selected.code);throw e2}
-  selected.qty=oldQty-q;data.sales.push(sale);persistLocal();render();document.getElementById("barcode").value="";document.getElementById("found").classList.add("hidden");selected=null;alert("Sale saved to your cloud account. Stock has been reduced.");
- }catch(e){alert("Sale was not completed: "+e.message+". Please refresh cloud records and try again.");await document.getElementById("refresh").click()}
- finally{btn.disabled=false;btn.textContent="Complete sale"}
-};
-document.getElementById("save-adjust").onclick=async()=>{
- const x=data.stock.find(a=>a.code===document.getElementById("adjust-colour").value),q=Number(document.getElementById("adjust-qty").value);if(!x||!Number.isInteger(q)||q<0)return alert("Enter a valid stock count.");
- const btn=document.getElementById("save-adjust");btn.disabled=true;
- try{const {error}=await db.from("pos_stock").upsert({code:x.code,colour:x.colour,qty:q,updated_at:new Date().toISOString()},{onConflict:"code"});if(error)throw error;x.qty=q;persistLocal();render();alert("Stock count saved to cloud.")}catch(e){alert("Could not save stock: "+e.message)}finally{btn.disabled=false}
-};
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));$(b.dataset.tab).classList.remove("hidden")}));
+function findCode(code){selected=data.stock.find(x=>x.code.toUpperCase()===code.trim().toUpperCase());if(!selected){$("found").classList.add("hidden");$("scan-message").textContent="Barcode not found. Check the code or label.";return} $("found-name").textContent=selected.product_name+" — "+selected.colour;$("found-detail").textContent=`${selected.size_label} · ${selected.qty} pieces remaining · ${selected.code} · Cost ${money(selected.cost)}`;$("qty").value=1;$("qty").max=selected.qty;$("found").classList.remove("hidden");$("scan-message").textContent="";updateTotal()}
+function updateTotal(){const q=Math.max(1,Number($("qty").value)||1);$("sale-total").textContent=money(q*(selected?.price||0))}
+$("lookup").onclick=()=>findCode($("barcode").value);$("qty").oninput=updateTotal;
+$("complete").onclick=async()=>{if(!selected)return;const q=Number($("qty").value);if(!Number.isInteger(q)||q<1)return alert("Enter a whole number quantity.");if(q>selected.qty)return alert("Not enough stock for this colour.");const btn=$("complete");btn.disabled=true;btn.textContent="Saving sale…";const old=selected.qty;const sale={id:uuid(),code:selected.code,colour:selected.colour,product_name:selected.product_name,size_label:selected.size_label,qty:q,price:selected.price,cost:selected.cost,total:q*selected.price,profit:q*(selected.price-selected.cost),payment:$("payment").value,at:new Date().toISOString()};try{const {error:e1}=await db.from("pos_stock").update({qty:old-q,updated_at:new Date().toISOString()}).eq("code",selected.code);if(e1)throw e1;const {error:e2}=await db.from("pos_sales").insert(sale);if(e2){await db.from("pos_stock").update({qty:old,updated_at:new Date().toISOString()}).eq("code",selected.code);throw e2}selected.qty=old-q;data.sales.push(sale);localStorage.setItem("bif_mobile_pos_v2_cache",JSON.stringify(data));render();$("barcode").value="";$("found").classList.add("hidden");selected=null;alert("Sale saved to cloud. Stock has been reduced.")}catch(e){alert("Sale was not completed: "+e.message);await $("refresh").click()}finally{btn.disabled=false;btn.textContent="Complete sale"}};
+$("save-adjust").onclick=async()=>{const x=data.stock.find(a=>a.code===$("adjust-code").value),q=Number($("adjust-qty").value);if(!x||!Number.isInteger(q)||q<0)return alert("Enter a valid stock count.");const b=$("save-adjust");b.disabled=true;try{const {error}=await db.from("pos_stock").update({qty:q,updated_at:new Date().toISOString()}).eq("code",x.code);if(error)throw error;x.qty=q;render();alert("Stock count saved to cloud.")}catch(e){alert("Could not save stock: "+e.message)}finally{b.disabled=false}};
+$("add-product").onclick=async()=>{const row={code:$("p-code").value.trim().toUpperCase(),product_name:$("p-name").value.trim(),size_label:$("p-size").value.trim(),colour:$("p-colour").value.trim(),qty:Number($("p-qty").value),price:Number($("p-price").value),cost:Number($("p-cost").value),updated_at:new Date().toISOString()};if(!row.code||!row.product_name||!row.size_label||!row.colour||![row.qty,row.price,row.cost].every(Number.isFinite)||row.qty<0||row.price<0||row.cost<0)return $("product-message").textContent="Please complete all fields with valid amounts.";if(data.stock.some(x=>x.code===row.code))return $("product-message").textContent="That barcode already exists. Use a different code.";const b=$("add-product");b.disabled=true;try{const {error}=await db.from("pos_stock").insert(row);if(error)throw error;data.stock.push(row);render();$("product-message").textContent="Product variation saved to cloud.";["p-name","p-size","p-colour","p-code"].forEach(id=>$(id).value="");$("p-qty").value=0}catch(e){$("product-message").textContent="Could not save: "+e.message}finally{b.disabled=false}};
+function parseCSV(text){const rows=[];let row=[],field="",quoted=false;for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];if(ch==='"'&&quoted&&next==='"'){field+='"';i++}else if(ch==='"'){quoted=!quoted}else if(ch===","&&!quoted){row.push(field);field=""}else if((ch==="\n"||ch==="\r")&&!quoted){if(ch==="\r"&&next==="\n")i++;row.push(field);if(row.some(v=>v.trim()))rows.push(row);row=[];field=""}else field+=ch}row.push(field);if(row.some(v=>v.trim()))rows.push(row);return rows}
+$("import-csv").onclick=async()=>{const file=$("csv-file").files[0];if(!file)return $("import-message").textContent="Choose the CSV file first.";const b=$("import-csv");b.disabled=true;$("import-message").textContent="Reading CSV…";try{const rows=parseCSV(await file.text());const headers=rows.shift().map(h=>h.trim().toLowerCase());const idx=k=>headers.indexOf(k);const required=["barcode","product_name","colour","size_years","opening_stock_qty","selling_price_ngn","production_cost_ngn"];if(required.some(k=>idx(k)<0))throw new Error("CSV columns do not match the required template.");const items=rows.map(r=>({code:r[idx("barcode")].trim().toUpperCase(),product_name:r[idx("product_name")].trim(),colour:r[idx("colour")].trim(),size_label:r[idx("size_years")].trim()+" years",qty:Number(r[idx("opening_stock_qty")]),price:Number(r[idx("selling_price_ngn")]),cost:Number(r[idx("production_cost_ngn")]),updated_at:new Date().toISOString()}));if(items.some(x=>!x.code||!x.product_name||!x.colour||!Number.isFinite(x.qty)||!Number.isFinite(x.price)||!Number.isFinite(x.cost)||x.qty<0||x.price<0||x.cost<0))throw new Error("One or more CSV rows contain missing or invalid values.");if(new Set(items.map(x=>x.code)).size!==items.length)throw new Error("The CSV contains duplicate barcodes.");const {error}=await db.from("pos_stock").upsert(items,{onConflict:"code"});if(error)throw error;await refreshData();$("import-message").textContent=`Successfully imported ${items.length} colour variations (${items.reduce((a,x)=>a+x.qty,0)} pieces).`}catch(e){$("import-message").textContent="Import failed: "+e.message}finally{b.disabled=false}};
+async function refreshData(){const d=await fetchCloudData();data=d;render()}
+$("expense-date").value=todayWAT();
+$("save-expense").onclick=async()=>{const day=$("expense-date").value,amount=Number($("expense-amount").value),category=$("expense-category").value,description=$("expense-description").value.trim();if(!day||!Number.isFinite(amount)||amount<=0)return $("expense-message").textContent="Enter a valid date and amount.";const e={id:uuid(),category,amount,description,incurred_at:new Date(day+"T12:00:00+01:00").toISOString(),created_at:new Date().toISOString()};const b=$("save-expense");b.disabled=true;try{const {error}=await db.from("pos_expenses").insert(e);if(error)throw error;data.expenses.unshift(e);render();$("expense-amount").value="";$("expense-description").value="";$("expense-message").textContent="Expense saved."}catch(err){$("expense-message").textContent="Could not save expense: "+err.message}finally{b.disabled=false}};
+function report(){const from=$("report-from").value,to=$("report-to").value;if(!from||!to||from>to)return $("report-result").textContent="Choose a valid date range.";const inRange=v=>{const d=todayWAT(v);return d>=from&&d<=to};const sales=data.sales.filter(s=>inRange(s.at)),ex=data.expenses.filter(e=>inRange(e.incurred_at));const revenue=sales.reduce((a,s)=>a+Number(s.total),0),gross=sales.reduce((a,s)=>a+Number(s.profit),0),expense=ex.reduce((a,e)=>a+Number(e.amount),0),units=sales.reduce((a,s)=>a+Number(s.qty),0);$("report-result").innerHTML=`<div class="grid"><div class="metric"><small>Pieces sold</small><strong>${units}</strong></div><div class="metric"><small>Revenue</small><strong>${money(revenue)}</strong></div><div class="metric"><small>Gross profit</small><strong>${money(gross)}</strong></div><div class="metric"><small>Expenses</small><strong>${money(expense)}</strong></div></div><div class="panel" style="margin-top:12px"><small>Net profit for selected period</small><h2>${money(gross-expense)}</h2><p class="muted">${from} to ${to} · Nigeria time</p></div>`}
+$("run-report").onclick=report;
 function downloadFile(name,content,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-document.getElementById("export").onclick=()=>{const lines=[["Date","Product","Colour","Barcode","Quantity","Unit Price","Unit Cost","Revenue","Gross Profit","Payment"],...data.sales.map(s=>[s.at,"Up & Down Set",s.colour,s.code,s.qty,s.price,s.cost,s.total,s.profit,s.payment])];const csv=lines.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(",")).join("\n");downloadFile("Bunnyinboxforkids-sales.csv",csv,"text/csv")};
-document.getElementById("backup").onclick=()=>downloadFile("Bunnyinboxforkids-POS-backup.json",JSON.stringify({stock:data.stock,sales:data.sales,exportedAt:new Date().toISOString()},null,2),"application/json");
-let scanner=null;
-document.getElementById("start-scan").onclick=async()=>{if(!window.Html5Qrcode){document.getElementById("scan-message").textContent="Scanner library did not load. Check your internet connection.";return}try{scanner=new Html5Qrcode("reader");await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:240,height:120}},async text=>{document.getElementById("barcode").value=text;await scanner.stop();scanner=null;document.getElementById("start-scan").classList.remove("hidden");document.getElementById("stop-scan").classList.add("hidden");findCode(text)});document.getElementById("start-scan").classList.add("hidden");document.getElementById("stop-scan").classList.remove("hidden")}catch(e){document.getElementById("scan-message").textContent="Camera access needs an HTTPS page and browser permission. "+e}};
-document.getElementById("stop-scan").onclick=async()=>{if(scanner){await scanner.stop();scanner=null}document.getElementById("start-scan").classList.remove("hidden");document.getElementById("stop-scan").classList.add("hidden")};
-</script>
-</body></html>
+$("export").onclick=()=>{const rows=[["Date (WAT)","Product","Size","Colour","Barcode","Quantity","Unit Price","Unit Cost","Revenue","Gross Profit","Payment"],...data.sales.map(s=>[dateWAT(s.at),s.product_name,s.size_label,s.colour,s.code,s.qty,s.price,s.cost,s.total,s.profit,s.payment])];const csv=rows.map(r=>r.map(v=>'"'+String(v??"").replaceAll('"','""')+'"').join(",")).join("\n");downloadFile("Bunnyinboxforkids-sales.csv",csv,"text/csv")};
+$("backup").onclick=()=>downloadFile("Bunnyinboxforkids-POS-backup.json",JSON.stringify({stock:data.stock,sales:data.sales,expenses:data.expenses,exportedAt:new Date().toISOString()},null,2),"application/json");
+$("start-scan").onclick=async()=>{if(!window.Html5Qrcode){$("scan-message").textContent="Scanner library did not load. Check internet.";return}try{scanner=new Html5Qrcode("reader");await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:120}},async text=>{$("barcode").value=text;await scanner.stop();scanner=null;$("start-scan").classList.remove("hidden");$("stop-scan").classList.add("hidden");findCode(text)});$("start-scan").classList.add("hidden");$("stop-scan").classList.remove("hidden")}catch(e){$("scan-message").textContent="Camera access needs HTTPS and browser permission. "+e}};
+$("stop-scan").onclick=async()=>{if(scanner){await scanner.stop();scanner=null}$("start-scan").classList.remove("hidden");$("stop-scan").classList.add("hidden")};
+</script></body></html>
