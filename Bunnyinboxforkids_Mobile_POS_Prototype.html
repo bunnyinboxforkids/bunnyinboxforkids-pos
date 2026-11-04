@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#6b4937">
+<title>Bunnyinboxforkids Mobile POS</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{--brown:#6b4937;--cream:#fbf7f1;--ink:#30251f;--muted:#786e67;--line:#e8ded4;--green:#28734b;--red:#a33b36}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:var(--brown);color:white;padding:22px 18px 18px}header h1{font-size:20px;margin:0 0 4px}header p{margin:0;color:#f1e7df;font-size:13px}
+main{max-width:760px;margin:auto;padding:16px}
+.tabs{display:flex;gap:8px;overflow:auto;margin:0 0 14px}.tabs button,.btn{border:0;border-radius:12px;padding:11px 14px;background:#eadfd5;color:var(--brown);font-weight:650;white-space:nowrap}.tabs button.active,.btn.primary{background:var(--brown);color:white}
+.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #49301a0a}
+h2{font-size:17px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{background:#f8f3ed;padding:13px;border-radius:12px}.metric small{display:block;color:var(--muted);font-size:12px}.metric strong{font-size:19px;display:block;margin-top:5px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}input,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;background:white;color:var(--ink)}
+button{cursor:pointer}.btn{margin-top:10px}.btn.full{width:100%}.btn.secondary{background:#f2ece5;color:var(--brown)}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+#reader{width:100%;overflow:hidden;border-radius:12px} .hidden{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:10px 6px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600;font-size:12px}
+.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#e8f2eb;color:var(--green);font-size:11px}
+.notice{background:#fff6e6;border:1px solid #f0dfbd;color:#70552a;padding:11px;border-radius:11px;font-size:12px;line-height:1.45}
+.sale{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.sale:last-child{border:0}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header><h1>Bunnyinboxforkids</h1><p>Mobile POS · Up & Down Set · Inventory & Sales</p></header>
+<main>
+<div class="notice" style="margin-bottom:14px"><b>First setup:</b> 152 pieces recorded. All colours are age 3 months–1 year. Selling price ₦6,000; production cost ₦2,900. This prototype saves records in this browser on this phone. It does not yet sync to another device or cloud account.</div>
+<nav class="tabs">
+<button class="active" data-tab="dashboard">Dashboard</button><button data-tab="sell">Record sale</button><button data-tab="stock">Stock</button><button data-tab="history">Sales history</button>
+</nav>
+<section id="dashboard" class="tab">
+<div class="grid">
+<div class="metric"><small>Pieces in stock</small><strong id="m-stock">152</strong></div>
+<div class="metric"><small>Sales revenue</small><strong id="m-revenue">₦0</strong></div>
+<div class="metric"><small>Gross profit</small><strong id="m-profit">₦0</strong></div>
+<div class="metric"><small>Pieces sold</small><strong id="m-sold">0</strong></div>
+</div>
+<div class="panel" style="margin-top:14px"><h2>Product</h2><b>Up & Down Set</b><p class="muted">Age 3 months–1 year · Selling price ₦6,000 · Production cost ₦2,900</p><p><span class="pill">Gross profit per piece: ₦3,100</span></p></div>
+<div class="panel"><h2>Stock by colour</h2><div id="dash-stock"></div></div>
+<button class="btn secondary full" id="export">Export sales CSV</button>
+</section>
+<section id="sell" class="tab hidden">
+<div class="panel"><h2>Scan product barcode</h2><p class="muted">Use the camera to scan a label, or type the barcode printed below it.</p>
+<div id="reader"></div><button class="btn primary full" id="start-scan">Start camera scanner</button><button class="btn secondary full hidden" id="stop-scan">Stop scanner</button>
+<label for="barcode">Barcode / product code</label><input id="barcode" placeholder="e.g. BIF-UD-RED" autocapitalize="characters">
+<button class="btn secondary full" id="lookup">Find product</button>
+<div id="found" class="hidden">
+<div class="panel" style="background:#fbf7f1;margin:14px 0 0"><b id="found-name">Up & Down Set</b><p class="muted" id="found-detail"></p>
+<div class="row"><div><label>Quantity sold</label><input id="qty" type="number" min="1" value="1"></div><div><label>Payment method</label><select id="payment"><option>Cash</option><option>Transfer</option><option>Card</option><option>Other</option></select></div></div>
+<p><b id="sale-total">₦6,000</b> <span class="muted">sale total</span></p><button class="btn primary full" id="complete">Complete sale</button></div></div>
+<p class="muted" id="scan-message"></p></div>
+</section>
+<section id="stock" class="tab hidden">
+<div class="panel"><h2>Current stock</h2><p class="muted">Edit stock quantities here if you need to correct a count. Sales reduce the selected colour automatically.</p><div id="stock-table"></div></div>
+<div class="panel"><h2>Adjust stock</h2><label>Colour</label><select id="adjust-colour"></select><label>New physical stock count</label><input id="adjust-qty" type="number" min="0"><button class="btn primary full" id="save-adjust">Save stock count</button></div>
+</section>
+<section id="history" class="tab hidden"><div class="panel"><h2>Sales history</h2><div id="sales-list" class="muted">No sales recorded yet.</div></div></section>
+<footer>Bunnyinboxforkids Mobile POS · Prototype v1</footer>
+</main>
+<script>
+const initial=[
+ {colour:"Red",code:"BIF-UD-RED",qty:24},
+ {colour:"Baby Pink",code:"BIF-UD-BPK",qty:18},
+ {colour:"Purple",code:"BIF-UD-PUR",qty:39},
+ {colour:"Brown",code:"BIF-UD-BRN",qty:28},
+ {colour:"Yellow",code:"BIF-UD-YEL",qty:28},
+ {colour:"Dove Grey",code:"BIF-UD-DGR",qty:15}
+];
+const PRICE=6000,COST=2900,KEY="bif_mobile_pos_v1";
+let data;
+try{data=JSON.parse(localStorage.getItem(KEY))||{stock:initial,sales:[]}}catch(e){data={stock:initial,sales:[]}}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function money(n){return "₦"+Number(n).toLocaleString("en-NG")}
+function totalStock(){return data.stock.reduce((a,x)=>a+x.qty,0)}
+function render(){
+ const sold=data.sales.reduce((a,s)=>a+s.qty,0),rev=data.sales.reduce((a,s)=>a+s.total,0),profit=data.sales.reduce((a,s)=>a+s.profit,0);
+ document.getElementById("m-stock").textContent=totalStock();
+ document.getElementById("m-revenue").textContent=money(rev);
+ document.getElementById("m-profit").textContent=money(profit);
+ document.getElementById("m-sold").textContent=sold;
+ const rows=data.stock.map(x=>`<div class="sale"><span>${x.colour}</span><b>${x.qty} pieces</b></div>`).join("");
+ document.getElementById("dash-stock").innerHTML=rows;
+ document.getElementById("stock-table").innerHTML=`<table><thead><tr><th>Colour</th><th>Barcode</th><th>In stock</th></tr></thead><tbody>${data.stock.map(x=>`<tr><td>${x.colour}</td><td>${x.code}</td><td><b>${x.qty}</b></td></tr>`).join("")}</tbody></table>`;
+ document.getElementById("adjust-colour").innerHTML=data.stock.map(x=>`<option value="${x.code}">${x.colour}</option>`).join("");
+ document.getElementById("sales-list").innerHTML=data.sales.length?data.sales.slice().reverse().map(s=>`<div class="sale"><div><b>${s.colour} · ${s.qty} pc</b><div class="muted">${new Date(s.at).toLocaleString()} · ${s.payment}</div></div><div><b>${money(s.total)}</b><div class="muted">Profit ${money(s.profit)}</div></div></div>`).join(""):"No sales recorded yet.";
+}
+let selected=null;
+function findCode(code){
+ selected=data.stock.find(x=>x.code.toUpperCase()===code.trim().toUpperCase());
+ const f=document.getElementById("found");
+ if(!selected){f.classList.add("hidden");document.getElementById("scan-message").textContent="Barcode not found. Check the code or register the correct label.";return}
+ document.getElementById("found-name").textContent="Up & Down Set — "+selected.colour;
+ document.getElementById("found-detail").textContent=`Age 3 months–1 year · ${selected.qty} pieces remaining · ${selected.code}`;
+ document.getElementById("qty").value=1;document.getElementById("qty").max=selected.qty;
+ document.getElementById("found").classList.remove("hidden");
+ document.getElementById("scan-message").textContent="";
+ updateTotal();
+}
+function updateTotal(){const q=Math.max(1,Number(document.getElementById("qty").value)||1);document.getElementById("sale-total").textContent=money(q*PRICE)}
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
+ document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+ document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));document.getElementById(b.dataset.tab).classList.remove("hidden");
+}));
+document.getElementById("lookup").onclick=()=>findCode(document.getElementById("barcode").value);
+document.getElementById("qty").oninput=updateTotal;
+document.getElementById("complete").onclick=()=>{
+ if(!selected)return;const q=Number(document.getElementById("qty").value);
+ if(!Number.isInteger(q)||q<1)return alert("Enter a whole number quantity.");
+ if(q>selected.qty)return alert("Not enough stock for this colour.");
+ selected.qty-=q;data.sales.push({code:selected.code,colour:selected.colour,qty:q,price:PRICE,cost:COST,total:q*PRICE,profit:q*(PRICE-COST),payment:document.getElementById("payment").value,at:new Date().toISOString()});
+ document.getElementById("barcode").value="";document.getElementById("found").classList.add("hidden");selected=null;save();alert("Sale recorded. Stock has been reduced.");
+};
+document.getElementById("save-adjust").onclick=()=>{const x=data.stock.find(a=>a.code===document.getElementById("adjust-colour").value),q=Number(document.getElementById("adjust-qty").value);if(!x||!Number.isInteger(q)||q<0)return alert("Enter a valid stock count.");x.qty=q;save();alert("Stock count updated.")};
+document.getElementById("export").onclick=()=>{
+ const lines=[["Date","Product","Colour","Barcode","Quantity","Unit Price","Unit Cost","Revenue","Gross Profit","Payment"],...data.sales.map(s=>[s.at,"Up & Down Set",s.colour,s.code,s.qty,s.price,s.cost,s.total,s.profit,s.payment])];
+ const csv=lines.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(",")).join("\n");
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="Bunnyinboxforkids-sales.csv";a.click();URL.revokeObjectURL(a.href);
+};
+let scanner=null;
+document.getElementById("start-scan").onclick=async()=>{
+ if(!window.Html5Qrcode){document.getElementById("scan-message").textContent="Scanner library did not load. Check your internet connection.";return}
+ try{
+  scanner=new Html5Qrcode("reader");
+  await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:240,height:120}},async text=>{
+   document.getElementById("barcode").value=text;
+   await scanner.stop();scanner=null;document.getElementById("start-scan").classList.remove("hidden");document.getElementById("stop-scan").classList.add("hidden");findCode(text);
+  });
+  document.getElementById("start-scan").classList.add("hidden");document.getElementById("stop-scan").classList.remove("hidden");
+ }catch(e){document.getElementById("scan-message").textContent="Camera access needs an HTTPS-hosted page and browser permission. "+e}
+};
+document.getElementById("stop-scan").onclick=async()=>{if(scanner){await scanner.stop();scanner=null}document.getElementById("start-scan").classList.remove("hidden");document.getElementById("stop-scan").classList.add("hidden")};
+render();
+</script>
+</body></html>
