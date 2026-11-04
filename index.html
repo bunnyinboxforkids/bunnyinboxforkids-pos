@@ -77,10 +77,18 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}.login{m
 <div class="notice">Import updates or adds rows by barcode. It does not delete other products or sales. Review the CSV quantities before importing to avoid overwriting a physical stock count.</div></div></section>
 <section id="expenses" class="tab hidden"><div class="panel"><h2>Record business expense</h2>
 <label>Expense date</label><input id="expense-date" type="date">
-<label>Category</label><select id="expense-category"><option>Fuel</option><option>Transportation</option><option>Packaging</option><option>Electricity</option><option>Marketing</option><option>Maintenance</option><option>Rent</option><option>Other</option></select>
+<label>Category</label><select id="expense-category"><option>Fuel</option><option>Transportation</option><option>Packaging</option><option>Electricity</option><option>Marketing</option><option>Maintenance</option><option>Rent</option><option>Employee salaries</option><option>Other</option></select>
 <label>Amount (₦)</label><input id="expense-amount" type="number" min="1" placeholder="e.g. 5000">
 <label>Description</label><input id="expense-description" placeholder="e.g. Fuel for generator">
 <button class="btn primary full" id="save-expense">Save expense</button><p class="muted" id="expense-message"></p></div>
+<div class="panel"><h2>Upload expense file (CSV)</h2>
+<p class="muted">Upload one file containing all your business expenses. Each row is saved separately and added to the total.</p>
+<div class="notice">Required columns: expense_date, category, amount, description. Use YYYY-MM-DD dates. Do not upload the same file twice.</div>
+<button class="btn secondary full" id="expense-template">Download expense CSV template</button>
+<label>Select expense CSV file</label><input id="expense-csv-file" type="file" accept=".csv,text/csv">
+<p class="muted" id="expense-file-preview">No file selected.</p>
+<button class="btn primary full" id="import-expenses">Upload expenses to cloud</button>
+<p class="muted" id="expense-import-message"></p></div>
 <div class="panel"><h2>Recent expenses</h2><div id="expense-list" class="muted"></div></div></section>
 <section id="history" class="tab hidden"><div class="panel"><h2>Sales history</h2><div id="sales-list" class="muted">No sales recorded yet.</div></div></section>
 <section id="reports" class="tab hidden"><div class="panel"><h2>Business reports</h2><p class="muted">Choose a date range. Dates are displayed in Nigeria time (WAT).</p>
@@ -141,6 +149,61 @@ $("expense-date").value=todayWAT();
 $("save-expense").onclick=async()=>{const day=$("expense-date").value,amount=Number($("expense-amount").value),category=$("expense-category").value,description=$("expense-description").value.trim();if(!day||!Number.isFinite(amount)||amount<=0)return $("expense-message").textContent="Enter a valid date and amount.";const e={id:uuid(),category,amount,description,incurred_at:new Date(day+"T12:00:00+01:00").toISOString(),created_at:new Date().toISOString()};const b=$("save-expense");b.disabled=true;try{const {error}=await db.from("pos_expenses").insert(e);if(error)throw error;data.expenses.unshift(e);render();$("expense-amount").value="";$("expense-description").value="";$("expense-message").textContent="Expense saved."}catch(err){$("expense-message").textContent="Could not save expense: "+err.message}finally{b.disabled=false}};
 function report(){const from=$("report-from").value,to=$("report-to").value;if(!from||!to||from>to)return $("report-result").textContent="Choose a valid date range.";const inRange=v=>{const d=todayWAT(v);return d>=from&&d<=to};const sales=data.sales.filter(s=>inRange(s.at)),ex=data.expenses.filter(e=>inRange(e.incurred_at));const revenue=sales.reduce((a,s)=>a+Number(s.total),0),gross=sales.reduce((a,s)=>a+Number(s.profit),0),expense=ex.reduce((a,e)=>a+Number(e.amount),0),units=sales.reduce((a,s)=>a+Number(s.qty),0);$("report-result").innerHTML=`<div class="grid"><div class="metric"><small>Pieces sold</small><strong>${units}</strong></div><div class="metric"><small>Revenue</small><strong>${money(revenue)}</strong></div><div class="metric"><small>Gross profit</small><strong>${money(gross)}</strong></div><div class="metric"><small>Expenses</small><strong>${money(expense)}</strong></div></div><div class="panel" style="margin-top:12px"><small>Net profit for selected period</small><h2>${money(gross-expense)}</h2><p class="muted">${from} to ${to} · Nigeria time</p></div>`}
 $("run-report").onclick=report;
+
+$("expense-template").onclick=()=>{
+  const rows=[["expense_date","category","amount","description"],
+    [todayWAT(),"Fuel",5000,"Generator fuel"],
+    [todayWAT(),"Rent",8000,"Shop rent"],
+    [todayWAT(),"Employee salaries",6000,"Staff salary"],
+    [todayWAT(),"Electricity",2000,"Power bill"],
+    [todayWAT(),"Transportation",3000,"Delivery and market transport"]];
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(",")).join("\n");
+  downloadFile("Bunnyinboxforkids-expense-template.csv",csv,"text/csv");
+};
+async function readExpenseCSV(file){
+  const rows=parseCSV(await file.text());
+  if(rows.length<2)throw new Error("The file has no expense rows.");
+  const headers=rows.shift().map(h=>h.trim().toLowerCase()),idx=k=>headers.indexOf(k);
+  const required=["expense_date","category","amount","description"];
+  if(required.some(k=>idx(k)<0))throw new Error("Required columns: expense_date, category, amount, description.");
+  const now=new Date().toISOString();
+  const items=rows.map((r,i)=>{
+    const day=(r[idx("expense_date")]||"").trim(),category=(r[idx("category")]||"").trim();
+    const amount=Number((r[idx("amount")]||"").trim()),description=(r[idx("description")]||"").trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!category||!Number.isFinite(amount)||amount<=0)
+      throw new Error("Check row "+(i+2)+": enter a YYYY-MM-DD date, category and amount greater than zero.");
+    const date=new Date(day+"T12:00:00+01:00");
+    if(Number.isNaN(date.getTime()))throw new Error("Invalid date on row "+(i+2)+".");
+    return {id:uuid(),category,amount,description,incurred_at:date.toISOString(),created_at:now};
+  });
+  return items;
+}
+$("expense-csv-file").onchange=async()=>{
+  const file=$("expense-csv-file").files[0];
+  if(!file){$("expense-file-preview").textContent="No file selected.";return;}
+  try{
+    const items=await readExpenseCSV(file),total=items.reduce((s,x)=>s+x.amount,0);
+    $("expense-file-preview").textContent=`${items.length} expense rows ready · Total ${money(total)}.`;
+    $("expense-import-message").textContent="";
+  }catch(e){$("expense-file-preview").textContent="Could not read file: "+e.message;}
+};
+$("import-expenses").onclick=async()=>{
+  const file=$("expense-csv-file").files[0];
+  if(!file)return $("expense-import-message").textContent="Choose an expense CSV file first.";
+  const b=$("import-expenses");b.disabled=true;b.textContent="Uploading…";
+  try{
+    const items=await readExpenseCSV(file),total=items.reduce((s,x)=>s+x.amount,0);
+    if(!confirm(`Upload ${items.length} expense records totalling ${money(total)}? Do not upload the same file twice.`))return;
+    const {error}=await db.from("pos_expenses").insert(items);
+    if(error)throw error;
+    await refreshData();
+    $("expense-import-message").textContent=`Successfully uploaded ${items.length} expenses totalling ${money(total)}. Dashboard net profit has been updated.`;
+    $("expense-file-preview").textContent="Upload complete.";
+    $("expense-csv-file").value="";
+  }catch(e){$("expense-import-message").textContent="Expense upload failed: "+e.message;}
+  finally{b.disabled=false;b.textContent="Upload expenses to cloud";}
+};
+
 function downloadFile(name,content,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 $("export").onclick=()=>{const rows=[["Date (WAT)","Product","Size","Colour","Barcode","Quantity","Unit Price","Unit Cost","Revenue","Gross Profit","Payment"],...data.sales.map(s=>[dateWAT(s.at),s.product_name,s.size_label,s.colour,s.code,s.qty,s.price,s.cost,s.total,s.profit,s.payment])];const csv=rows.map(r=>r.map(v=>'"'+String(v??"").replaceAll('"','""')+'"').join(",")).join("\n");downloadFile("Bunnyinboxforkids-sales.csv",csv,"text/csv")};
 $("backup").onclick=()=>downloadFile("Bunnyinboxforkids-POS-backup.json",JSON.stringify({stock:data.stock,sales:data.sales,expenses:data.expenses,exportedAt:new Date().toISOString()},null,2),"application/json");
