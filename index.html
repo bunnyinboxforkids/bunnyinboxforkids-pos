@@ -45,12 +45,14 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}.login{m
 <section id="dashboard" class="tab">
 <div class="grid">
 <div class="metric"><small>Pieces in stock</small><strong id="m-stock">0</strong></div>
+<div class="metric"><small>Potential stock revenue</small><strong id="m-potential">₦0</strong></div>
 <div class="metric"><small>Sales revenue</small><strong id="m-revenue">₦0</strong></div>
 <div class="metric"><small>Gross profit</small><strong id="m-profit">₦0</strong></div>
 <div class="metric"><small>Pieces sold</small><strong id="m-sold">0</strong></div>
 <div class="metric"><small>Business expenses</small><strong id="m-expenses">₦0</strong></div>
 <div class="metric"><small>Net profit</small><strong id="m-net">₦0</strong></div>
 </div>
+<p class="muted" style="margin:8px 2px 0">Potential stock revenue is the estimated amount you could earn if all remaining stock sells at its current selling price. It is not money already received.</p>
 <div class="panel" style="margin-top:14px"><h2>Inventory by product</h2><div id="dash-products"></div></div>
 <div class="panel"><h2>Today at a glance</h2><div id="today-summary" class="muted"></div></div>
 <div class="panel"><h2>Hourly sales activity</h2><p class="muted">Sales revenue recorded by hour in Nigeria time (WAT).</p><div id="hourly-chart" class="hour-chart" aria-label="Hourly sales activity chart"></div><div class="chart-legend">Each bar represents sales revenue for that hour. Empty hours mean no sale was recorded.</div></div>
@@ -114,8 +116,8 @@ function showLogin(msg=""){$("app-screen").classList.add("hidden");$("login-scre
 async function login(){const email=$("email").value.trim(),password=$("password").value;if(!email||!password){$("login-message").textContent="Enter your email and password.";return}const b=$("login-btn");b.disabled=true;b.textContent="Signing in…";const {data:d,error}=await db.auth.signInWithPassword({email,password});b.disabled=false;b.textContent="Sign in";if(error){$("login-message").textContent=error.message;return}await loadCloud(d.session)}
 function safeText(s){return String(s??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
 function render(){
- const sold=data.sales.reduce((a,s)=>a+Number(s.qty||0),0),rev=data.sales.reduce((a,s)=>a+Number(s.total||0),0),gp=data.sales.reduce((a,s)=>a+Number(s.profit||0),0),expenses=data.expenses.reduce((a,e)=>a+Number(e.amount||0),0);
- $("m-stock").textContent=totalStock();$("m-revenue").textContent=money(rev);$("m-profit").textContent=money(gp);$("m-sold").textContent=sold;$("m-expenses").textContent=money(expenses);$("m-net").textContent=money(gp-expenses);
+ const sold=data.sales.reduce((a,s)=>a+Number(s.qty||0),0),rev=data.sales.reduce((a,s)=>a+Number(s.total||0),0),gp=data.sales.reduce((a,s)=>a+Number(s.profit||0),0),expenses=data.expenses.reduce((a,e)=>a+Number(e.amount||0),0),potential=data.stock.reduce((a,x)=>a+Number(x.qty||0)*Number(x.price||0),0);
+ $("m-stock").textContent=totalStock();$("m-potential").textContent=money(potential);$("m-revenue").textContent=money(rev);$("m-profit").textContent=money(gp);$("m-sold").textContent=sold;$("m-expenses").textContent=money(expenses);$("m-net").textContent=money(gp-expenses);
  const groups={};data.stock.forEach(x=>{const k=(x.product_name||"Product")+" · "+(x.size_label||"Size not set");groups[k]=(groups[k]||0)+Number(x.qty||0)});
  $("dash-products").innerHTML=Object.keys(groups).length?Object.entries(groups).map(([k,v])=>`<div class="sale"><span>${safeText(k)}</span><b>${v} pieces</b></div>`).join(""):"No products yet.";
  const t=todayWAT(),ts=data.sales.filter(s=>todayWAT(s.at)===t),te=data.expenses.filter(e=>todayWAT(e.incurred_at)===t);
