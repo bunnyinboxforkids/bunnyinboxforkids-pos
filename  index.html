@@ -75,7 +75,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}.login{m
 <label>Production cost per piece (₦)</label><input id="p-cost" type="number" min="0" value="0">
 <button class="btn primary full" id="add-product">Save product variation</button><p class="muted" id="product-message"></p></div>
 <div class="panel"><h2>Bulk import stock using CSV</h2><p class="muted">Upload the CSV prepared for Product 2. It must contain: barcode, product_name, colour, size_years, opening_stock_qty, selling_price_ngn, production_cost_ngn.</p>
-<label>Select CSV file</label><input id="csv-file" type="file" accept=".csv,text/csv"><p class="muted" id="stock-file-preview">No file selected.</p><button class="btn secondary full hidden" id="cancel-stock-file" type="button">Cancel / remove selected file</button><button class="btn primary full" id="import-csv">Import CSV to cloud</button><p class="muted" id="import-message"></p>
+<label>Select CSV file</label><input id="csv-file" type="file" accept=".csv,text/csv"><p class="muted" id="stock-file-preview">No file selected.</p><button class="btn secondary full" id="cancel-stock-file" type="button" disabled>Cancel / remove selected file</button><button class="btn primary full" id="import-csv">Import CSV to cloud</button><p class="muted" id="import-message"></p>
 <div class="notice">Import updates or adds rows by barcode. It does not delete other products or sales. Review the CSV quantities before importing to avoid overwriting a physical stock count.</div></div></section>
 <section id="expenses" class="tab hidden"><div class="panel"><h2>Record business expense</h2>
 <label>Expense date</label><input id="expense-date" type="date">
@@ -89,7 +89,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}.login{m
 <button class="btn secondary full" id="expense-template">Download expense CSV template</button>
 <label>Select expense CSV file</label><input id="expense-csv-file" type="file" accept=".csv,text/csv">
 <p class="muted" id="expense-file-preview">No file selected.</p>
-<button class="btn secondary full hidden" id="cancel-expense-file" type="button">Cancel / remove selected file</button>
+<button class="btn secondary full" id="cancel-expense-file" type="button" disabled>Cancel / remove selected file</button>
 <button class="btn primary full" id="import-expenses">Upload expenses to cloud</button>
 <p class="muted" id="expense-import-message"></p></div>
 <div class="panel"><h2>Recent expenses</h2><div id="expense-list" class="muted"></div></div></section>
@@ -173,7 +173,7 @@ $("save-adjust").onclick=async()=>{const x=data.stock.find(a=>a.code===$("adjust
 $("add-product").onclick=async()=>{const row={code:$("p-code").value.trim().toUpperCase(),product_name:$("p-name").value.trim(),size_label:$("p-size").value.trim(),colour:$("p-colour").value.trim(),qty:Number($("p-qty").value),price:Number($("p-price").value),cost:Number($("p-cost").value),updated_at:new Date().toISOString()};if(!row.code||!row.product_name||!row.size_label||!row.colour||![row.qty,row.price,row.cost].every(Number.isFinite)||row.qty<0||row.price<0||row.cost<0)return $("product-message").textContent="Please complete all fields with valid amounts.";if(data.stock.some(x=>x.code===row.code))return $("product-message").textContent="That barcode already exists. Use a different code.";const b=$("add-product");b.disabled=true;try{const {error}=await db.from("pos_stock").insert(row);if(error)throw error;data.stock.push(row);render();$("product-message").textContent="Product variation saved to cloud.";["p-name","p-size","p-colour","p-code"].forEach(id=>$(id).value="");$("p-qty").value=0}catch(e){$("product-message").textContent="Could not save: "+e.message}finally{b.disabled=false}};
 $("csv-file").onchange=()=>{
   const file=$("csv-file").files[0];
-  $("cancel-stock-file").classList.toggle("hidden",!file);
+  $("cancel-stock-file").disabled=!file;
   $("stock-file-preview").textContent=file?`Selected: ${file.name} · ${(file.size/1024).toFixed(1)} KB`:"No file selected.";
   $("import-message").textContent="";
 };
@@ -181,7 +181,7 @@ $("cancel-stock-file").onclick=()=>{
   $("csv-file").value="";
   $("stock-file-preview").textContent="No file selected.";
   $("import-message").textContent="Selected stock file cancelled. Nothing was imported.";
-  $("cancel-stock-file").classList.add("hidden");
+  $("cancel-stock-file").disabled=true;
 };
 
 function parseCSV(text){const rows=[];let row=[],field="",quoted=false;for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];if(ch==='"'&&quoted&&next==='"'){field+='"';i++}else if(ch==='"'){quoted=!quoted}else if(ch===","&&!quoted){row.push(field);field=""}else if((ch==="\n"||ch==="\r")&&!quoted){if(ch==="\r"&&next==="\n")i++;row.push(field);if(row.some(v=>v.trim()))rows.push(row);row=[];field=""}else field+=ch}row.push(field);if(row.some(v=>v.trim()))rows.push(row);return rows}
@@ -222,7 +222,7 @@ async function readExpenseCSV(file){
 }
 $("expense-csv-file").onchange=async()=>{
   const file=$("expense-csv-file").files[0];
-  $("cancel-expense-file").classList.toggle("hidden",!file);
+  $("cancel-expense-file").disabled=!file;
   if(!file){$("expense-file-preview").textContent="No file selected.";return;}
   try{
     const items=await readExpenseCSV(file),total=items.reduce((s,x)=>s+x.amount,0);
@@ -234,7 +234,7 @@ $("cancel-expense-file").onclick=()=>{
   $("expense-csv-file").value="";
   $("expense-file-preview").textContent="No file selected.";
   $("expense-import-message").textContent="Selected file cancelled. Nothing was uploaded.";
-  $("cancel-expense-file").classList.add("hidden");
+  $("cancel-expense-file").disabled=true;
 };
 $("import-expenses").onclick=async()=>{
   const file=$("expense-csv-file").files[0];
@@ -249,7 +249,7 @@ $("import-expenses").onclick=async()=>{
     $("expense-import-message").textContent=`Successfully uploaded ${items.length} expenses totalling ${money(total)}. Dashboard net profit has been updated.`;
     $("expense-file-preview").textContent="Upload complete.";
     $("expense-csv-file").value="";
-    $("cancel-expense-file").classList.add("hidden");
+    $("cancel-expense-file").disabled=true;
   }catch(e){$("expense-import-message").textContent="Expense upload failed: "+e.message;}
   finally{b.disabled=false;b.textContent="Upload expenses to cloud";}
 };
