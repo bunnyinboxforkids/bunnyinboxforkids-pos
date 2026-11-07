@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bunnyinboxforkids Employee POS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f7f3ed;color:#302820;font-family:Arial,sans-serif}
+header{background:white;padding:18px;border-bottom:1px solid #e5ddd3;display:flex;justify-content:space-between;align-items:center}
+.brand{font:22px Georgia,serif;color:#654b36}
+main{max-width:950px;margin:auto;padding:20px 15px}
+.panel{background:white;border:1px solid #e5ddd3;border-radius:14px;padding:20px;margin:15px 0}
+h1{font-size:24px}h2{font-size:19px}
+label{display:block;margin:14px 0 6px;font-size:14px}
+input{width:100%;padding:13px;border:1px solid #ddd2c6;border-radius:9px;font-size:16px}
+button{background:#684b35;color:white;border:0;border-radius:9px;padding:12px 17px;font-size:15px;font-weight:bold}
+.secondary{background:#eee7df;color:#443629}
+.full{width:100%;margin-top:17px}
+.hidden{display:none!important}
+.notice{background:#f4eee7;padding:12px;border-radius:9px;margin-top:12px;font-size:14px}
+.error{background:#fff0ed;color:#9a3529}
+.tabs{display:flex;gap:8px;overflow:auto;margin:15px 0}
+.tabs button{white-space:nowrap}
+.tabs button.active{background:#302820}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.metric{background:#f8f4ef;padding:15px;border-radius:10px}
+.metric strong{display:block;font-size:23px;margin-top:8px}
+.muted{font-size:13px;color:#82776d}
+.item{display:flex;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #eee7df}
+@media(min-width:650px){.grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="brand">Bunnyinboxforkids</div><div class="muted">Employee Inventory & Sales</div></div>
+  <button id="logout" class="secondary hidden">Sign out</button>
+</header>
+<main>
+<section id="login" class="panel" style="max-width:430px;margin:8vh auto">
+<h1>Employee sign in</h1>
+<p class="muted">Use the account details provided by your CEO.</p>
+<form id="loginForm">
+<label>Email address</label>
+<input id="email" type="email" required autocomplete="username">
+<label>Password</label>
+<input id="password" type="password" required autocomplete="current-password">
+<button class="full" id="loginButton">Sign in</button>
+</form>
+<div id="loginMessage" class="notice hidden"></div>
+</section>
+
+<section id="dashboard" class="hidden">
+<h1 id="welcome">Employee dashboard</h1>
+<p class="muted">Your stock and sales activity</p>
+<nav class="tabs">
+<button class="active" data-tab="overview">Overview</button>
+<button data-tab="inventory">Inventory</button>
+<button data-tab="sales">Sales</button>
+<button data-tab="returns">Returns</button>
+</nav>
+
+<section id="overview" class="panel">
+<h2>Today's overview</h2>
+<div class="grid">
+<div class="metric"><span class="muted">Stock items</span><strong id="stockCount">0</strong></div>
+<div class="metric"><span class="muted">Units available</span><strong id="stockUnits">0</strong></div>
+<div class="metric"><span class="muted">Sales today</span><strong id="salesCount">0</strong></div>
+<div class="metric"><span class="muted">Sales total</span><strong id="salesTotal">₦0</strong></div>
+</div>
+</section>
+
+<section id="inventory" class="panel hidden">
+<h2>My inventory</h2>
+<div id="inventoryList" class="muted">Loading inventory…</div>
+</section>
+
+<section id="sales" class="panel hidden">
+<h2>My sales</h2>
+<div id="salesList" class="muted">Loading sales…</div>
+</section>
+
+<section id="returns" class="panel hidden">
+<h2>Product returns</h2>
+<p class="muted">Returned quantities will be restored to your available stock and recorded against the original sale.</p>
+</section>
+</section>
+</main>
+
+<script>
+const SUPABASE_URL="https://boglyupooamohtrfsyub.supabase.co";
+const SUPABASE_KEY="sb_publishable_6gPUK3tnseQPnn3CzoMAeg_EXJO68D5";
+
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+  auth:{
+    persistSession:true,
+    autoRefreshToken:true,
+    detectSessionInUrl:true
+  }
+});
+
+const el=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat("en-NG",{
+  style:"currency",currency:"NGN",maximumFractionDigits:0
+}).format(Number(n)||0);
+
+function safe(value){
+  return String(value??"").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function showLogin(){
+  el("login").classList.remove("hidden");
+  el("dashboard").classList.add("hidden");
+  el("logout").classList.add("hidden");
+}
+
+function showDashboard(name){
+  el("login").classList.add("hidden");
+  el("dashboard").classList.remove("hidden");
+  el("logout").classList.remove("hidden");
+  el("welcome").textContent=name?"Welcome, "+name:"Employee dashboard";
+}
+
+async function loadInventory(userId){
+  const {data,error}=await db.from("employee_stock")
+    .select("barcode,product_name,size_label,colour,remaining_qty,unit_price")
+    .eq("employee_id",userId)
+    .order("product_name");
+
+  if(error)throw error;
+  const rows=data||[];
+
+  el("stockCount").textContent=rows.length;
+  el("stockUnits").textContent=rows.reduce((sum,x)=>sum+Number(x.remaining_qty||0),0);
+
+  el("inventoryList").innerHTML=rows.length?rows.map(x=>`
+    <div class="item">
+      <div><strong>${safe(x.product_name)}</strong>
+      <div class="muted">${safe([x.size_label,x.colour,x.barcode].filter(Boolean).join(" · "))}</div></div>
+      <div style="text-align:right"><strong>${Number(x.remaining_qty)}</strong>
+      <div class="muted">${money(x.unit_price)}</div></div>
+    </div>`).join(""):"No stock uploaded yet.";
+}
+
+async function loadSales(userId){
+  const {data,error}=await db.from("employee_sales")
+    .select("sale_ref,total,payment_method,created_at")
+    .eq("employee_id",userId)
+    .order("created_at",{ascending:false})
+    .limit(50);
+
+  if(error)throw error;
+  const rows=data||[];
+  const midnight=new Date();
+  midnight.setHours(0,0,0,0);
+  const today=rows.filter(x=>new Date(x.created_at)>=midnight);
+
+  el("salesCount").textContent=today.length;
+  el("salesTotal").textContent=money(today.reduce((s,x)=>s+Number(x.total||0),0));
+
+  el("salesList").innerHTML=rows.length?rows.map(x=>`
+    <div class="item">
+      <div><strong>${safe(x.sale_ref||"Sale")}</strong>
+      <div class="muted">${new Date(x.created_at).toLocaleString("en-NG")} · ${safe(x.payment_method||"")}</div></div>
+      <strong>${money(x.total)}</strong>
+    </div>`).join(""):"No sales recorded yet.";
+}
+
+async function openEmployee(user){
+  const {data:profile,error}=await db.from("employee_profiles")
+    .select("full_name,role,is_active")
+    .eq("user_id",user.id)
+    .maybeSingle();
+
+  if(error)throw error;
+
+  if(!profile||profile.role!=="employee"||!profile.is_active){
+    await db.auth.signOut();
+    throw new Error("This employee account is not active. Please contact your CEO.");
+  }
+
+  showDashboard(profile.full_name);
+  await Promise.all([loadInventory(user.id),loadSales(user.id)]);
+}
+
+el("loginForm").addEventListener("submit",async event=>{
+  event.preventDefault();
+  el("loginButton").disabled=true;
+  el("loginButton").textContent="Signing in…";
+
+  try{
+    const {data,error}=await db.auth.signInWithPassword({
+      email:el("email").value.trim(),
+      password:el("password").value
+    });
+    if(error)throw error;
+    await openEmployee(data.user);
+  }catch(error){
+    el("loginMessage").textContent=error.message;
+    el("loginMessage").classList.remove("hidden");
+    el("loginMessage").classList.add("error");
+  }finally{
+    el("loginButton").disabled=false;
+    el("loginButton").textContent="Sign in";
+  }
+});
+
+el("logout").addEventListener("click",async()=>{
+  await db.auth.signOut();
+  showLogin();
+});
+
+document.querySelectorAll("[data-tab]").forEach(button=>{
+  button.addEventListener("click",()=>{
+    document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b===button));
+    ["overview","inventory","sales","returns"].forEach(tab=>{
+      el(tab).classList.toggle("hidden",tab!==button.dataset.tab);
+    });
+  });
+});
+
+db.auth.onAuthStateChange(event=>{
+  if(event==="SIGNED_OUT")showLogin();
+});
+
+db.auth.getSession().then(async({data,error})=>{
+  if(error)throw error;
+  if(data.session)await openEmployee(data.session.user);
+}).catch(error=>{
+  showLogin();
+  el("loginMessage").textContent=error.message;
+  el("loginMessage").classList.remove("hidden");
+});
+</script>
+</body>
+</html>
