@@ -58,12 +58,51 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}.login{m
 <div class="panel"><h2>Hourly sales activity</h2><p class="muted">Sales revenue recorded by hour in Nigeria time (WAT).</p><div id="hourly-chart" class="hour-chart" aria-label="Hourly sales activity chart"></div><div class="chart-legend">Each bar represents sales revenue for that hour. Empty hours mean no sale was recorded.</div></div>
 <div class="actions"><button class="btn secondary" id="export">Export sales CSV</button><button class="btn secondary" id="backup">Download full POS backup (JSON)</button></div>
 </section>
-<section id="sell" class="tab hidden"><div class="panel"><h2>Scan product barcode</h2><p class="muted">Scan the printed label or type its product code.</p>
-<div id="reader"></div><button class="btn primary full" id="start-scan">Start camera scanner</button><button class="btn secondary full hidden" id="stop-scan">Stop scanner</button>
-<label>Barcode / product code</label><input id="barcode" placeholder="e.g. BIF-UD2-YEL" autocapitalize="characters"><button class="btn secondary full" id="lookup">Find product</button>
-<div id="found" class="hidden"><div class="panel" style="background:#fbf7f1;margin:14px 0 0"><b id="found-name"></b><p class="muted" id="found-detail"></p>
-<div class="row"><div><label>Quantity sold</label><input id="qty" type="number" min="1" value="1"></div><div><label>Payment method</label><select id="payment"><option>Cash</option><option>Transfer</option><option>Card</option><option>Other</option></select></div></div>
-<p><b id="sale-total">₦0</b> <span class="muted">sale total</span></p><button class="btn primary full" id="complete">Complete sale</button></div></div><p class="muted" id="scan-message"></p></div></section>
+<section id="sell" class="tab hidden">
+<div class="panel">
+<h2>Scan product barcode</h2>
+<p class="muted">Scan the printed label or type its product code. Add several products before completing one checkout.</p>
+<div id="reader"></div>
+<button class="btn primary full" id="start-scan">Start camera scanner</button>
+<button class="btn secondary full hidden" id="stop-scan">Stop scanner</button>
+<label>Barcode / product code</label>
+<input id="barcode" placeholder="e.g. BIF-UD2-YEL" autocapitalize="characters">
+<button class="btn secondary full" id="lookup">Find product</button>
+<div id="found" class="hidden">
+  <div class="panel" style="background:#fbf7f1;margin:14px 0 0">
+    <b id="found-name"></b>
+    <p class="muted" id="found-detail"></p>
+    <label>Quantity to add</label>
+    <input id="qty" type="number" min="1" value="1">
+    <p><b id="sale-total">₦0</b> <span class="muted">line total</span></p>
+    <button class="btn primary full" id="add-to-cart">Add item to cart</button>
+  </div>
+</div>
+<p class="muted" id="scan-message"></p>
+</div>
+
+<div class="panel" style="margin-top:14px">
+<h2>Current sale</h2>
+<p class="muted">Scan or enter each product, then add it to this sale.</p>
+<div id="cart-lines"><p class="muted">Your cart is empty.</p></div>
+<label>Payment method / status</label>
+<select id="payment">
+  <option>Cash · Paid</option>
+  <option>Transfer · Paid</option>
+  <option>Card · Paid</option>
+  <option>Other · Paid</option>
+  <option>Transfer · Pending</option>
+  <option>Cash · Pending</option>
+</select>
+<div class="sale"><span>Items</span><b id="cart-quantity">0</b></div>
+<div class="sale"><span>Subtotal</span><b id="cart-subtotal">₦0</b></div>
+<div class="sale"><span>Discount</span><b id="cart-discount">₦0</b></div>
+<div class="sale"><strong>Total due</strong><strong id="cart-total">₦0</strong></div>
+<button class="btn primary full" id="checkout" disabled>Complete checkout</button>
+<button class="btn secondary full" id="clear-cart" disabled>Clear cart</button>
+<p class="muted" id="cart-message"></p>
+</div>
+</section>
 <section id="stock" class="tab hidden"><div class="panel"><h2>Current stock</h2><p class="muted">Sales reduce stock automatically. Stock changes are saved to your cloud account.</p><div class="table-wrap" id="stock-table"></div></div>
 <div class="panel"><h2>Adjust stock</h2><p class="muted">Enter a positive number to add stock or a negative number to remove stock. Every adjustment is recorded in the stock audit.</p><label>Product / colour / size</label><select id="adjust-code"></select><label>Quantity to add or remove</label><input id="adjust-qty" type="number" step="1" placeholder="e.g. 10 to add, -2 to remove"><label>Reason for adjustment</label><input id="adjust-reason" type="text" maxlength="500" placeholder="e.g. New production received"><button class="btn primary full" id="save-adjust">Save stock adjustment</button><p class="muted" id="adjust-message"></p></div></section>
 <section id="products" class="tab hidden">
@@ -141,10 +180,181 @@ $("login-btn").onclick=login;$("password").addEventListener("keydown",e=>{if(e.k
 $("logout").onclick=async()=>{await db.auth.signOut();showLogin()};$("refresh").onclick=async()=>{const {data:s}=await db.auth.getSession();if(s.session)await loadCloud(s.session)};
 db.auth.getSession().then(({data:s,error})=>{if(error||!s.session)showLogin();else loadCloud(s.session)});
 document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));$(b.dataset.tab).classList.remove("hidden")}));
-function findCode(code){selected=data.stock.find(x=>x.code.toUpperCase()===code.trim().toUpperCase());if(!selected){$("found").classList.add("hidden");$("scan-message").textContent="Barcode not found. Check the code or label.";return} $("found-name").textContent=selected.product_name+" — "+selected.colour;$("found-detail").textContent=`${selected.size_label} · ${selected.qty} pieces remaining · ${selected.code} · Cost ${money(selected.cost)}`;$("qty").value=1;$("qty").max=selected.qty;$("found").classList.remove("hidden");$("scan-message").textContent="";updateTotal()}
-function updateTotal(){const q=Math.max(1,Number($("qty").value)||1);$("sale-total").textContent=money(q*(selected?.price||0))}
-$("lookup").onclick=()=>findCode($("barcode").value);$("qty").oninput=updateTotal;
-$("complete").onclick=async()=>{if(!selected)return;const q=Number($("qty").value);if(!Number.isInteger(q)||q<1)return alert("Enter a whole number quantity.");if(q>selected.qty)return alert("Not enough stock for this colour.");const btn=$("complete");btn.disabled=true;btn.textContent="Saving sale…";const old=selected.qty;const sale={id:uuid(),code:selected.code,colour:selected.colour,product_name:selected.product_name,size_label:selected.size_label,qty:q,price:selected.price,cost:selected.cost,total:q*selected.price,profit:q*(selected.price-selected.cost),payment:$("payment").value,at:new Date().toISOString()};try{const {error:e1}=await db.from("pos_stock").update({qty:old-q,updated_at:new Date().toISOString()}).eq("code",selected.code);if(e1)throw e1;const {error:e2}=await db.from("pos_sales").insert(sale);if(e2){await db.from("pos_stock").update({qty:old,updated_at:new Date().toISOString()}).eq("code",selected.code);throw e2}selected.qty=old-q;data.sales.push(sale);localStorage.setItem("bif_mobile_pos_v2_cache",JSON.stringify(data));render();$("barcode").value="";$("found").classList.add("hidden");selected=null;alert("Sale saved to cloud. Stock has been reduced.")}catch(e){alert("Sale was not completed: "+e.message);await $("refresh").click()}finally{btn.disabled=false;btn.textContent="Complete sale"}};
+let cart=[];
+
+function findCode(code){
+  selected=data.stock.find(x=>x.code.toUpperCase()===code.trim().toUpperCase());
+  if(!selected){
+    $("found").classList.add("hidden");
+    $("scan-message").textContent="Barcode not found. Check the code or label.";
+    return;
+  }
+  $("found-name").textContent=selected.product_name+" — "+selected.colour;
+  $("found-detail").textContent=selected.size_label+" · "+selected.qty+" pieces remaining · "+selected.code+" · Unit price "+money(selected.price);
+  $("qty").value=1;
+  $("qty").max=selected.qty;
+  $("found").classList.remove("hidden");
+  $("scan-message").textContent="";
+  updateTotal();
+}
+
+function updateTotal(){
+  const q=Math.max(1,Number($("qty").value)||1);
+  $("sale-total").textContent=money(q*(selected?.price||0));
+}
+
+function cartTotals(){
+  const quantity=cart.reduce((n,x)=>n+x.qty,0);
+  const subtotal=cart.reduce((n,x)=>n+x.qty*x.price,0);
+  const discount=quantity>=3?1000:0;
+  return {quantity,subtotal,discount,total:Math.max(0,subtotal-discount)};
+}
+
+function renderCart(){
+  const t=cartTotals();
+  $("cart-lines").innerHTML=cart.length
+    ?cart.map((x,i)=>'<div class="sale"><div><b>'+safeText(x.product_name)+' · '+safeText(x.colour)+'</b><div class="muted">'+safeText(x.size_label)+' · '+x.qty+' × '+money(x.price)+'</div></div><div><b>'+money(x.qty*x.price)+'</b><button class="btn danger-btn" data-remove-cart="'+i+'">Remove</button></div></div>').join("")
+    :'<p class="muted">Your cart is empty.</p>';
+
+  $("cart-quantity").textContent=t.quantity+" unit(s)";
+  $("cart-subtotal").textContent=money(t.subtotal);
+  $("cart-discount").textContent=money(t.discount);
+  $("cart-total").textContent=money(t.total);
+  $("checkout").disabled=!cart.length;
+  $("clear-cart").disabled=!cart.length;
+
+  document.querySelectorAll("[data-remove-cart]").forEach(b=>{
+    b.onclick=()=>{
+      cart.splice(Number(b.dataset.removeCart),1);
+      renderCart();
+    };
+  });
+}
+
+$("lookup").onclick=()=>findCode($("barcode").value);
+$("qty").oninput=updateTotal;
+
+$("add-to-cart").onclick=()=>{
+  if(!selected)return;
+  const q=Number($("qty").value);
+  const inCart=cart.find(x=>x.code===selected.code);
+  const already=inCart?.qty||0;
+
+  if(!Number.isInteger(q)||q<1){
+    $("cart-message").textContent="Enter a whole-number quantity.";
+    return;
+  }
+  if(q+already>selected.qty){
+    $("cart-message").textContent="Not enough stock for this colour.";
+    return;
+  }
+
+  if(inCart)inCart.qty+=q;
+  else cart.push({
+    code:selected.code,
+    colour:selected.colour,
+    product_name:selected.product_name,
+    size_label:selected.size_label,
+    price:Number(selected.price),
+    cost:Number(selected.cost),
+    qty:q
+  });
+
+  $("cart-message").textContent="Item added. Scan another product or complete checkout.";
+  $("barcode").value="";
+  $("found").classList.add("hidden");
+  selected=null;
+  renderCart();
+};
+
+$("clear-cart").onclick=()=>{
+  cart=[];
+  $("cart-message").textContent="Cart cleared. No sale was recorded.";
+  renderCart();
+};
+
+$("checkout").onclick=async()=>{
+  if(!cart.length)return;
+
+  for(const item of cart){
+    const stock=data.stock.find(x=>x.code===item.code);
+    if(!stock||item.qty>Number(stock.qty||0)){
+      $("cart-message").textContent="Stock changed for "+item.code+". Refresh the POS before checkout.";
+      return;
+    }
+  }
+
+  const btn=$("checkout");
+  const payment=$("payment").value;
+  const totals=cartTotals();
+  const subtotal=totals.subtotal;
+  const at=new Date().toISOString();
+
+  const sales=cart.map(item=>{
+    const line=item.qty*item.price;
+    const discountShare=subtotal?totals.discount*line/subtotal:0;
+    const net=Math.round(line-discountShare);
+    return {
+      id:uuid(),
+      code:item.code,
+      colour:item.colour,
+      product_name:item.product_name,
+      size_label:item.size_label,
+      qty:item.qty,
+      price:item.price,
+      cost:item.cost,
+      total:net,
+      profit:net-item.qty*item.cost,
+      payment,
+      at
+    };
+  });
+
+  const updated=[];
+  btn.disabled=true;
+  btn.textContent="Saving checkout…";
+  $("cart-message").textContent="Saving all items. Please keep this page open.";
+
+  try{
+    for(const item of cart){
+      const stock=data.stock.find(x=>x.code===item.code);
+      const previous=Number(stock.qty);
+      const next=previous-item.qty;
+
+      const {error}=await db.from("pos_stock")
+        .update({qty:next,updated_at:at})
+        .eq("code",item.code);
+
+      if(error)throw error;
+      updated.push({stock,previous,next});
+    }
+
+    const {error}=await db.from("pos_sales").insert(sales);
+    if(error)throw error;
+
+    updated.forEach(x=>x.stock.qty=x.next);
+    data.sales.push(...sales);
+    localStorage.setItem("bif_mobile_pos_v2_cache",JSON.stringify(data));
+
+    cart=[];
+    render();
+    renderCart();
+    $("barcode").value="";
+    $("cart-message").textContent="Checkout saved successfully. Stock has been reduced.";
+    alert("Checkout completed. "+totals.quantity+" unit(s) recorded for "+money(totals.total)+".");
+  }catch(e){
+    for(const x of updated.reverse()){
+      await db.from("pos_stock")
+        .update({qty:x.previous,updated_at:new Date().toISOString()})
+        .eq("code",x.stock.code);
+    }
+    $("cart-message").textContent="Checkout could not be completed: "+(e.message||e)+". Stock changes were rolled back where possible.";
+    await $("refresh").click();
+  }finally{
+    btn.disabled=!cart.length;
+    btn.textContent="Complete checkout";
+  }
+};
 async function deleteSale(id){
  const sale=data.sales.find(x=>String(x.id)===String(id));
  if(!sale)return alert("Sale not found. Refresh your POS and try again.");
