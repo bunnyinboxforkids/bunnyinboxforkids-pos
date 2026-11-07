@@ -1,67 +1,71 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bunnyinboxforkids Employee POS</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f7f3ed;color:#302820;font-family:Arial,sans-serif}
-header{background:white;padding:18px;border-bottom:1px solid #e5ddd3;display:flex;justify-content:space-between;align-items:center}
-.brand{font:22px Georgia,serif;color:#654b36}
-main{max-width:950px;margin:auto;padding:20px 15px}
-.panel{background:white;border:1px solid #e5ddd3;border-radius:14px;padding:20px;margin:15px 0}
-h1{font-size:24px}h2{font-size:19px}
-label{display:block;margin:14px 0 6px;font-size:14px}
-input{width:100%;padding:13px;border:1px solid #ddd2c6;border-radius:9px;font-size:16px}
-button{background:#684b35;color:white;border:0;border-radius:9px;padding:12px 17px;font-size:15px;font-weight:bold}
-.secondary{background:#eee7df;color:#443629}
-.full{width:100%;margin-top:17px}
-.hidden{display:none!important}
-.notice{background:#f4eee7;padding:12px;border-radius:9px;margin-top:12px;font-size:14px}
-.error{background:#fff0ed;color:#9a3529}
-.tabs{display:flex;gap:8px;overflow:auto;margin:15px 0}
-.tabs button{white-space:nowrap}
-.tabs button.active{background:#302820}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.metric{background:#f8f4ef;padding:15px;border-radius:10px}
-.metric strong{display:block;font-size:23px;margin-top:8px}
+header{background:#fff;padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5ddd3;position:sticky;top:0;z-index:3}
+.brand{font:21px Georgia,serif;color:#654b36}
+main{max-width:1000px;margin:auto;padding:16px}
+.panel{background:#fff;border:1px solid #e5ddd3;border-radius:13px;padding:17px;margin:13px 0}
+h1{font-size:23px;margin:8px 0}h2{font-size:18px;margin:5px 0 14px}
+label{display:block;font-size:13px;font-weight:bold;margin:12px 0 5px}
+input,select{width:100%;padding:12px;border:1px solid #ddd2c6;border-radius:9px;background:white;font-size:15px}
+button{background:#684b35;color:white;border:0;border-radius:9px;padding:12px 15px;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5}.secondary{background:#eee7df;color:#443629}.danger{background:#963e32}
+.full{width:100%;margin-top:14px}.hidden{display:none!important}
+.tabs{display:flex;gap:7px;overflow:auto;margin:15px 0}
+.tabs button{white-space:nowrap}.tabs button.active{background:#302820}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.metric{background:#f8f4ef;padding:14px;border-radius:10px}
+.metric strong{font-size:22px;display:block;margin-top:7px}
 .muted{font-size:13px;color:#82776d}
-.item{display:flex;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #eee7df}
+.notice{padding:11px;background:#f4eee7;border-radius:9px;margin-top:12px;font-size:13px}
+.error{background:#fff0ed;color:#9a3529}
+.item{padding:12px 0;border-bottom:1px solid #eee7df}
+.item:last-child{border:0}
+.line{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.actions button{padding:9px 12px}
+#reader{width:100%;margin-top:12px}
 @media(min-width:650px){.grid{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
 <header>
-  <div><div class="brand">Bunnyinboxforkids</div><div class="muted">Employee Inventory & Sales</div></div>
-  <button id="logout" class="secondary hidden">Sign out</button>
+ <div><div class="brand">Bunnyinboxforkids</div><div class="muted">Employee Inventory & Sales</div></div>
+ <button id="logout" class="secondary hidden">Sign out</button>
 </header>
 <main>
 <section id="login" class="panel" style="max-width:430px;margin:8vh auto">
 <h1>Employee sign in</h1>
 <p class="muted">Use the account details provided by your CEO.</p>
 <form id="loginForm">
-<label>Email address</label>
-<input id="email" type="email" required autocomplete="username">
-<label>Password</label>
-<input id="password" type="password" required autocomplete="current-password">
+<label>Email address</label><input id="email" type="email" required>
+<label>Password</label><input id="password" type="password" required>
 <button class="full" id="loginButton">Sign in</button>
 </form>
 <div id="loginMessage" class="notice hidden"></div>
 </section>
 
-<section id="dashboard" class="hidden">
+<section id="app" class="hidden">
 <h1 id="welcome">Employee dashboard</h1>
-<p class="muted">Your stock and sales activity</p>
+<p class="muted">Manage your stock and daily sales.</p>
 <nav class="tabs">
-<button class="active" data-tab="overview">Overview</button>
-<button data-tab="inventory">Inventory</button>
-<button data-tab="sales">Sales</button>
+<button class="active" data-tab="home">Overview</button>
+<button data-tab="stock">Stock</button>
+<button data-tab="checkout">Sell</button>
+<button data-tab="history">Sales</button>
 <button data-tab="returns">Returns</button>
 </nav>
 
-<section id="overview" class="panel">
+<section id="home" class="panel">
 <h2>Today's overview</h2>
 <div class="grid">
 <div class="metric"><span class="muted">Stock items</span><strong id="stockCount">0</strong></div>
@@ -69,171 +73,211 @@ button{background:#684b35;color:white;border:0;border-radius:9px;padding:12px 17
 <div class="metric"><span class="muted">Sales today</span><strong id="salesCount">0</strong></div>
 <div class="metric"><span class="muted">Sales total</span><strong id="salesTotal">₦0</strong></div>
 </div>
+<div id="homeMessage" class="notice">Your employee workspace.</div>
 </section>
 
-<section id="inventory" class="panel hidden">
-<h2>My inventory</h2>
-<div id="inventoryList" class="muted">Loading inventory…</div>
+<section id="stock" class="panel hidden">
+<h2>Upload daily stock</h2>
+<form id="stockForm">
+<label>Barcode</label>
+<input id="barcode" required placeholder="Scan or enter barcode">
+<div class="actions">
+<button type="button" id="scanStock">Scan barcode</button>
+<button type="button" class="secondary" id="stopScan">Stop camera</button>
+</div>
+<div id="reader"></div>
+<label>Product name</label><input id="productName" required>
+<label>Size</label><input id="size" placeholder="e.g. 2 years">
+<label>Colour</label><input id="colour" placeholder="e.g. Blue">
+<label>Quantity received</label><input id="quantity" type="number" min="1" step="1" required>
+<label>Selling price per unit (₦)</label><input id="price" type="number" min="100" step="1" required>
+<button class="full" id="uploadButton">Add stock</button>
+</form>
+<div class="notice">Adding the same barcode again on the same day adds to its existing quantity.</div>
+<h2 style="margin-top:24px">Available stock</h2>
+<div id="stockList" class="muted">Loading stock…</div>
 </section>
 
-<section id="sales" class="panel hidden">
-<h2>My sales</h2>
-<div id="salesList" class="muted">Loading sales…</div>
+<section id="checkout" class="panel hidden">
+<h2>New sale</h2>
+<label>Scan or enter product barcode</label>
+<input id="saleBarcode" placeholder="Enter barcode and tap Add">
+<div class="actions">
+<button type="button" id="scanSale">Scan barcode</button>
+<button type="button" class="secondary" id="stopSaleScan">Stop camera</button>
+<button type="button" id="addBarcode">Add product</button>
+</div>
+<div id="saleReader"></div>
+<div id="cart"></div>
+<div class="notice" id="cartTotals">Subtotal: ₦0 · Discount: ₦0 · Total: ₦0</div>
+<label>Payment method</label>
+<select id="paymentMethod">
+<option value="Cash">Cash</option>
+<option value="Transfer">Bank Transfer</option>
+<option value="POS">POS</option>
+</select>
+<label>Payment status</label>
+<select id="paymentStatus">
+<option value="paid">Paid</option>
+<option value="unpaid">Unpaid</option>
+</select>
+<button class="full" id="completeSale">Save sale</button>
+<div id="checkoutMessage" class="notice hidden"></div>
+</section>
+
+<section id="history" class="panel hidden">
+<h2>Sales history</h2>
+<div id="salesList">Loading sales…</div>
 </section>
 
 <section id="returns" class="panel hidden">
-<h2>Product returns</h2>
-<p class="muted">Returned quantities will be restored to your available stock and recorded against the original sale.</p>
+<h2>Customer returns</h2>
+<p class="muted">Select an item from an original sale. The returned quantity will be restored to your stock.</p>
+<div id="returnList">Loading sold products…</div>
 </section>
 </section>
 </main>
 
 <script>
-const SUPABASE_URL="https://boglyupooamohtrfsyub.supabase.co";
-const SUPABASE_KEY="sb_publishable_6gPUK3tnseQPnn3CzoMAeg_EXJO68D5";
-
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
-  auth:{
-    persistSession:true,
-    autoRefreshToken:true,
-    detectSessionInUrl:true
-  }
+const URL="https://boglyupooamohtrfsyub.supabase.co";
+const KEY="sb_publishable_6gPUK3tnseQPnn3CzoMAeg_EXJO68D5";
+const db=window.supabase.createClient(URL,KEY,{
+ auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
-
-const el=id=>document.getElementById(id);
-const money=n=>new Intl.NumberFormat("en-NG",{
-  style:"currency",currency:"NGN",maximumFractionDigits:0
-}).format(Number(n)||0);
-
-function safe(value){
-  return String(value??"").replace(/[&<>"']/g,c=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
+const $=id=>document.getElementById(id);
+let currentUser=null,stockRows=[],cart=[],scanner=null,saleScanner=null;
+const money=n=>new Intl.NumberFormat("en-NG",{style:"currency",currency:"NGN",maximumFractionDigits:0}).format(Number(n)||0);
+const safe=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function msg(id,text,error=false){$(id).textContent=text;$(id).classList.remove("hidden","error");if(error)$(id).classList.add("error")}
+function showLogin(){$("login").classList.remove("hidden");$("app").classList.add("hidden");$("logout").classList.add("hidden")}
+function showApp(name){$("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");$("welcome").textContent="Welcome, "+(name||"Employee")}
+function tab(name){
+ document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
+ ["home","stock","checkout","history","returns"].forEach(x=>$(x).classList.toggle("hidden",x!==name));
+ if(name==="stock")loadStock();
+ if(name==="history")loadSales();
+ if(name==="returns")loadReturns();
 }
+document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
 
-function showLogin(){
-  el("login").classList.remove("hidden");
-  el("dashboard").classList.add("hidden");
-  el("logout").classList.add("hidden");
+async function enter(user){
+ const {data,error}=await db.from("employee_profiles").select("full_name,role,is_active").eq("user_id",user.id).maybeSingle();
+ if(error)throw error;
+ if(!data||data.role!=="employee"||!data.is_active){await db.auth.signOut();throw new Error("Employee account inactive. Contact your CEO.")}
+ currentUser=user;showApp(data.full_name);
+ await refreshAll();
 }
+async function refreshAll(){await loadStock();await loadSales();}
 
-function showDashboard(name){
-  el("login").classList.add("hidden");
-  el("dashboard").classList.remove("hidden");
-  el("logout").classList.remove("hidden");
-  el("welcome").textContent=name?"Welcome, "+name:"Employee dashboard";
+async function loadStock(){
+ const {data,error}=await db.from("employee_stock").select("id,barcode,product_name,size_label,colour,remaining_qty,unit_price").eq("employee_id",currentUser.id).order("product_name");
+ if(error)throw error;stockRows=data||[];
+ $("stockCount").textContent=stockRows.length;
+ $("stockUnits").textContent=stockRows.reduce((s,x)=>s+Number(x.remaining_qty),0);
+ $("stockList").innerHTML=stockRows.length?stockRows.map(x=>`
+ <div class="item line"><div><strong>${safe(x.product_name)}</strong><div class="muted">${safe([x.barcode,x.size_label,x.colour].filter(Boolean).join(" · "))}</div></div>
+ <div style="text-align:right"><strong>${x.remaining_qty}</strong><div class="muted">${money(x.unit_price)}</div></div></div>`).join(""):"No stock uploaded yet.";
 }
-
-async function loadInventory(userId){
-  const {data,error}=await db.from("employee_stock")
-    .select("barcode,product_name,size_label,colour,remaining_qty,unit_price")
-    .eq("employee_id",userId)
-    .order("product_name");
-
-  if(error)throw error;
-  const rows=data||[];
-
-  el("stockCount").textContent=rows.length;
-  el("stockUnits").textContent=rows.reduce((sum,x)=>sum+Number(x.remaining_qty||0),0);
-
-  el("inventoryList").innerHTML=rows.length?rows.map(x=>`
-    <div class="item">
-      <div><strong>${safe(x.product_name)}</strong>
-      <div class="muted">${safe([x.size_label,x.colour,x.barcode].filter(Boolean).join(" · "))}</div></div>
-      <div style="text-align:right"><strong>${Number(x.remaining_qty)}</strong>
-      <div class="muted">${money(x.unit_price)}</div></div>
-    </div>`).join(""):"No stock uploaded yet.";
+async function loadSales(){
+ const {data,error}=await db.from("employee_sales").select("id,sale_ref,total,payment_method,payment_status,created_at").eq("employee_id",currentUser.id).order("created_at",{ascending:false}).limit(100);
+ if(error)throw error;const rows=data||[];
+ const start=new Date();start.setHours(0,0,0,0);
+ const today=rows.filter(x=>new Date(x.created_at)>=start);
+ $("salesCount").textContent=today.length;
+ $("salesTotal").textContent=money(today.reduce((s,x)=>s+Number(x.total),0));
+ $("salesList").innerHTML=rows.length?rows.map(x=>`
+ <div class="item line"><div><strong>${safe(x.sale_ref)}</strong><div class="muted">${new Date(x.created_at).toLocaleString("en-NG")} · ${safe(x.payment_method)} · ${safe(x.payment_status)}</div></div><strong>${money(x.total)}</strong></div>`).join(""):"No sales yet.";
 }
-
-async function loadSales(userId){
-  const {data,error}=await db.from("employee_sales")
-    .select("sale_ref,total,payment_method,created_at")
-    .eq("employee_id",userId)
-    .order("created_at",{ascending:false})
-    .limit(50);
-
-  if(error)throw error;
-  const rows=data||[];
-  const midnight=new Date();
-  midnight.setHours(0,0,0,0);
-  const today=rows.filter(x=>new Date(x.created_at)>=midnight);
-
-  el("salesCount").textContent=today.length;
-  el("salesTotal").textContent=money(today.reduce((s,x)=>s+Number(x.total||0),0));
-
-  el("salesList").innerHTML=rows.length?rows.map(x=>`
-    <div class="item">
-      <div><strong>${safe(x.sale_ref||"Sale")}</strong>
-      <div class="muted">${new Date(x.created_at).toLocaleString("en-NG")} · ${safe(x.payment_method||"")}</div></div>
-      <strong>${money(x.total)}</strong>
-    </div>`).join(""):"No sales recorded yet.";
-}
-
-async function openEmployee(user){
-  const {data:profile,error}=await db.from("employee_profiles")
-    .select("full_name,role,is_active")
-    .eq("user_id",user.id)
-    .maybeSingle();
-
-  if(error)throw error;
-
-  if(!profile||profile.role!=="employee"||!profile.is_active){
-    await db.auth.signOut();
-    throw new Error("This employee account is not active. Please contact your CEO.");
-  }
-
-  showDashboard(profile.full_name);
-  await Promise.all([loadInventory(user.id),loadSales(user.id)]);
-}
-
-el("loginForm").addEventListener("submit",async event=>{
-  event.preventDefault();
-  el("loginButton").disabled=true;
-  el("loginButton").textContent="Signing in…";
-
-  try{
-    const {data,error}=await db.auth.signInWithPassword({
-      email:el("email").value.trim(),
-      password:el("password").value
-    });
-    if(error)throw error;
-    await openEmployee(data.user);
-  }catch(error){
-    el("loginMessage").textContent=error.message;
-    el("loginMessage").classList.remove("hidden");
-    el("loginMessage").classList.add("error");
-  }finally{
-    el("loginButton").disabled=false;
-    el("loginButton").textContent="Sign in";
-  }
+$("stockForm").addEventListener("submit",async e=>{
+ e.preventDefault();$("uploadButton").disabled=true;
+ try{
+ const item={barcode:$("barcode").value.trim(),product_name:$("productName").value.trim(),size_label:$("size").value.trim(),colour:$("colour").value.trim(),quantity:Number($("quantity").value),unit_price:Number($("price").value)};
+ if(!item.quantity||item.quantity<1||!item.unit_price||item.unit_price<100)throw new Error("Enter a valid quantity and price of at least ₦100.");
+ const {error}=await db.rpc("employee_add_stock",{p_items:[item]});if(error)throw error;
+ $("stockForm").reset();await loadStock();msg("homeMessage","Stock successfully added.");
+ }catch(err){alert(err.message)}finally{$("uploadButton").disabled=false}
 });
-
-el("logout").addEventListener("click",async()=>{
-  await db.auth.signOut();
-  showLogin();
+function renderCart(){
+ let subtotal=0,discount=0;
+ $("cart").innerHTML=cart.length?cart.map((x,i)=>{
+ const line=x.unit_price*x.quantity;subtotal+=line;discount+=100*x.quantity;
+ return `<div class="item"><div class="line"><div><strong>${safe(x.product_name)}</strong><div class="muted">${money(x.unit_price)} each · ${safe(x.barcode)}</div></div><strong>${money((x.unit_price-100)*x.quantity)}</strong></div>
+ <div class="actions"><button class="secondary" onclick="changeQty(${i},-1)">−</button><strong style="padding:9px">${x.quantity}</strong><button class="secondary" onclick="changeQty(${i},1)">+</button><button class="danger" onclick="removeCart(${i})">Remove</button></div></div>`;
+ }).join(""):"No products added to this sale.";
+ $("cartTotals").textContent="Subtotal: "+money(subtotal)+" · Discount: "+money(discount)+" · Total: "+money(subtotal-discount);
+}
+window.changeQty=(i,d)=>{const n=cart[i].quantity+d;if(n<1)return;if(n>cart[i].remaining_qty)return alert("Quantity exceeds available stock.");cart[i].quantity=n;renderCart()};
+window.removeCart=i=>{cart.splice(i,1);renderCart()};
+function addByBarcode(code){
+ const product=stockRows.find(x=>x.barcode===code);
+ if(!product)return alert("Barcode not found in your available stock.");
+ if(product.remaining_qty<1)return alert("This product is out of stock.");
+ const existing=cart.find(x=>x.id===product.id);
+ if(existing){if(existing.quantity>=product.remaining_qty)return alert("No more available stock.");existing.quantity++}
+ else cart.push({...product,quantity:1});
+ $("saleBarcode").value="";renderCart();
+}
+$("addBarcode").addEventListener("click",()=>addByBarcode($("saleBarcode").value.trim()));
+$("saleBarcode").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addByBarcode(e.target.value.trim())}});
+$("completeSale").addEventListener("click",async()=>{
+ if(!cart.length)return alert("Add products to the sale first.");
+ $("completeSale").disabled=true;
+ try{
+ const {data,error}=await db.rpc("employee_checkout",{
+ p_items:cart.map(x=>({stock_id:x.id,quantity:x.quantity})),
+ p_payment_method:$("paymentMethod").value,
+ p_payment_status:$("paymentStatus").value
+ });
+ if(error)throw error;
+ cart=[];renderCart();await refreshAll();msg("checkoutMessage","Sale saved successfully.");
+ }catch(err){msg("checkoutMessage",err.message,true)}
+ finally{$("completeSale").disabled=false}
 });
+async function loadReturns(){
+ const {data,error}=await db.from("employee_sale_items").select("id,barcode,product_name,size_label,quantity,returned_qty,unit_price,sale_id,employee_sales!inner(employee_id,sale_ref,created_at)").eq("employee_sales.employee_id",currentUser.id).order("created_at",{ascending:false}).limit(100);
+ if(error){$("returnList").textContent=error.message;return}
+ const rows=data||[];
+ $("returnList").innerHTML=rows.length?rows.map(x=>`
+ <div class="item"><strong>${safe(x.product_name)}</strong><div class="muted">${safe(x.barcode)} · Sale ${safe(x.sale_id)} · Sold ${x.quantity} · Returned ${x.returned_qty}</div>
+ <label>Quantity to return</label><input id="rq-${x.id}" type="number" min="1" max="${x.quantity-x.returned_qty}" value="1">
+ <label>Return reason</label><input id="rr-${x.id}" placeholder="Reason for return">
+ <button style="margin-top:10px" onclick="recordReturn('${x.id}')">Restore stock</button></div>`).join(""):"No sold products available for return.";
+}
+window.recordReturn=async id=>{
+ const qty=Number($("rq-"+id).value),reason=$("rr-"+id).value.trim();
+ if(!qty||qty<1||reason.length<3)return alert("Enter a valid quantity and return reason.");
+ const {error}=await db.rpc("employee_record_return",{p_sale_item_id:id,p_quantity:qty,p_reason:reason});
+ if(error)return alert(error.message);
+ alert("Return recorded. Stock quantity restored.");await loadReturns();await loadStock();
+};
+async function startScanner(target,inputId){
+ try{
+ const scannerObj=new Html5Qrcode(target);
+ if(target==="reader")scanner=scannerObj;else saleScanner=scannerObj;
+ await scannerObj.start({facingMode:"environment"},{fps:10,qrbox:{width:230,height:130}},text=>{
+ $(inputId).value=text;scannerObj.stop().catch(()=>{});
+ if(inputId==="saleBarcode")addByBarcode(text);
+ });
+ }catch(err){alert("Camera could not start. Check camera permission or enter the barcode manually.")}
+}
+async function stopScanner(which){
+ const s=which==="stock"?scanner:saleScanner;
+ if(s&&s.isScanning){await s.stop().catch(()=>{});await s.clear().catch(()=>{})}
+}
+$("scanStock").onclick=()=>startScanner("reader","barcode");
+$("stopScan").onclick=()=>stopScanner("stock");
+$("scanSale").onclick=()=>startScanner("saleReader","saleBarcode");
+$("stopSaleScan").onclick=()=>stopScanner("sale");
 
-document.querySelectorAll("[data-tab]").forEach(button=>{
-  button.addEventListener("click",()=>{
-    document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b===button));
-    ["overview","inventory","sales","returns"].forEach(tab=>{
-      el(tab).classList.toggle("hidden",tab!==button.dataset.tab);
-    });
-  });
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();$("loginButton").disabled=true;
+ try{const {data,error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error)throw error;await enter(data.user)}
+ catch(err){msg("loginMessage",err.message,true)}
+ finally{$("loginButton").disabled=false}
 });
-
-db.auth.onAuthStateChange(event=>{
-  if(event==="SIGNED_OUT")showLogin();
-});
-
-db.auth.getSession().then(async({data,error})=>{
-  if(error)throw error;
-  if(data.session)await openEmployee(data.session.user);
-}).catch(error=>{
-  showLogin();
-  el("loginMessage").textContent=error.message;
-  el("loginMessage").classList.remove("hidden");
-});
+$("logout").onclick=async()=>{await db.auth.signOut();currentUser=null;showLogin()};
+db.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")showLogin()});
+db.auth.getSession().then(async({data,error})=>{if(error)throw error;if(data.session)await enter(data.session.user)}).catch(err=>msg("loginMessage",err.message,true));
 </script>
 </body>
 </html>
