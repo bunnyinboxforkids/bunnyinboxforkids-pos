@@ -53,6 +53,40 @@ button:disabled{opacity:.5}.secondary{background:#eee7df;color:#443629}.danger{b
 </form>
 <div id="loginMessage" class="notice hidden"></div>
 </section>
+ 
+
+
+
+<section id="adminApp" class="hidden">
+  <h1 id="adminWelcome">CEO Dashboard</h1>
+  <p class="muted">Employee management and business overview</p>
+
+  <div class="panel">
+    <h2>Business Overview</h2>
+    <div class="grid">
+      <div class="metric">
+        <span class="muted">Employees</span>
+        <strong id="adminEmployees">0</strong>
+      </div>
+      <div class="metric">
+        <span class="muted">Sales Today</span>
+        <strong id="adminSalesToday">₦0</strong>
+      </div>
+      <div class="metric">
+        <span class="muted">Transactions Today</span>
+        <strong id="adminTransactions">0</strong>
+      </div>
+    </div>
+    <button class="full" onclick="loadAdminDashboard()">
+      Refresh Dashboard
+    </button>
+  </div>
+
+  <div class="panel">
+    <h2>Employee Accounts & Performance</h2>
+    <div id="adminEmployeeList">Loading employees...</div>
+  </div>
+</section>
 
 <section id="app" class="hidden">
 <h1 id="welcome">Employee dashboard</h1>
@@ -151,6 +185,51 @@ const safe=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"
 function msg(id,text,error=false){$(id).textContent=text;$(id).classList.remove("hidden","error");if(error)$(id).classList.add("error")}
 function showLogin(){$("login").classList.remove("hidden");$("app").classList.add("hidden");$("logout").classList.add("hidden")}
 function showApp(name){$("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");$("welcome").textContent="Welcome, "+(name||"Employee")}
+ function showAdmin(name){
+  $("login").classList.add("hidden");
+  $("app").classList.add("hidden");
+  $("adminApp").classList.remove("hidden");
+  $("adminWelcome").textContent="Welcome, "+name;
+}
+
+async function loadAdminDashboard(){
+  const {data,error}=await db.rpc("employee_admin_dashboard");
+  if(error)throw error;
+
+  const employees=data.employees||[];
+
+  $("adminEmployees").textContent=employees.length;
+  $("adminSalesToday").textContent=money(data.sales_today||0);
+  $("adminTransactions").textContent=data.sales_count_today||0;
+
+  $("adminEmployeeList").innerHTML=employees.length
+    ?employees.map(e=>`
+      <div class="item line">
+        <div>
+          <strong>${safe(e.full_name)}</strong>
+          <div class="muted">
+            Sales: ${e.sales_count} · Stock: ${e.stock_units} · Total: ${money(e.sales_total)}
+          </div>
+          <div class="muted">${e.is_active?"Active":"Inactive"}</div>
+        </div>
+        <button class="secondary"
+          onclick="setEmployeeActive('${e.user_id}',${!e.is_active})">
+          ${e.is_active?"Deactivate":"Activate"}
+        </button>
+      </div>
+    `).join("")
+    :"No employee accounts yet.";
+}
+
+window.setEmployeeActive=async(id,active)=>{
+  if(!confirm(active?"Activate this employee?":"Deactivate this employee?"))return;
+  const {error}=await db.rpc("employee_admin_set_active",{
+    p_employee_id:id,
+    p_is_active:active
+  });
+  if(error)return alert(error.message);
+  await loadAdminDashboard();
+};
 function tab(name){
  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
  ["home","stock","checkout","history","returns"].forEach(x=>$(x).classList.toggle("hidden",x!==name));
@@ -161,13 +240,41 @@ function tab(name){
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
 
 async function enter(user){
- const {data,error}=await db.from("employee_profiles").select("full_name,role,is_active").eq("user_id",user.id).maybeSingle();
- if(error)throw error;
- if(!data||data.role!=="employee"||!data.is_active){await db.auth.signOut();throw new Error("Employee account inactive. Contact your CEO.")}
- currentUser=user;showApp(data.full_name);
- await refreshAll();
+  const {data,error}=await db
+    .from("employee_profiles")
+    .select("full_name,role,is_active")
+    .eq("user_id",user.id)
+    .maybeSingle();
+
+  if(error)throw error;
+
+  if(!data||!data.is_active||
+     !["employee","admin"].includes(data.role)){
+    await db.auth.signOut();
+    throw new Error("Account inactive or not authorised.");
+  }
+
+  currentUser=user;
+
+  if(data.role==="admin"){
+    showAdmin(data.full_name);
+    await loadAdminDashboard();
+    return;
+  }
+
+  showApp(data.full_name);
+  await refreshAll();
 }
-async function refreshAll(){await loadStock();await loadSales();}
+
+async function refreshAll(){
+  await loadStock();
+  await loadSales();
+}
+
+ 
+ 
+
+
 
 async function loadStock(){
  const {data,error}=await db.from("employee_stock").select("id,barcode,product_name,size_label,colour,remaining_qty,unit_price").eq("employee_id",currentUser.id).order("product_name");
