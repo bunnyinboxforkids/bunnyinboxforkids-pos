@@ -81,7 +81,27 @@ button:disabled{opacity:.5}.secondary{background:#eee7df;color:#443629}.danger{b
       Refresh Dashboard
     </button>
   </div>
+  <div class="panel">
+    <h2>Create Employee Account</h2>
+    <p class="muted">Create and manage employee login details.</p>
 
+    <form id="createEmployeeForm">
+      <label>Employee full name</label>
+      <input id="newEmployeeName" required minlength="2" maxlength="100">
+
+      <label>Employee email</label>
+      <input id="newEmployeeEmail" type="email" required>
+
+      <label>Temporary password</label>
+      <input id="newEmployeePassword" type="password" required minlength="8" maxlength="72">
+
+      <button class="full" id="createEmployeeButton">
+        Create Employee Account
+      </button>
+    </form>
+
+    <div id="createEmployeeMessage" class="notice hidden"></div>
+  </div>
   <div class="panel">
     <h2>Employee Accounts & Performance</h2>
     <div id="adminEmployeeList">Loading employees...</div>
@@ -220,6 +240,35 @@ async function loadAdminDashboard(){
     `).join("")
     :"No employee accounts yet.";
 }
+$("createEmployeeForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+
+  const button=$("createEmployeeButton");
+  button.disabled=true;
+
+  try{
+    const {data,error}=await db.functions.invoke("create-employee",{
+      body:{
+        full_name:$("newEmployeeName").value.trim(),
+        email:$("newEmployeeEmail").value.trim(),
+        temporary_password:$("newEmployeePassword").value
+      }
+    });
+
+    if(error) throw error;
+    if(!data?.success) throw new Error(data?.error||"Could not create employee.");
+
+    $("createEmployeeForm").reset();
+    alert("Employee account created successfully.");
+    await loadAdminDashboard();
+
+  }catch(err){
+    alert(err.message||"Employee creation failed.");
+  }finally{
+    button.disabled=false;
+    }
+});
+
 
 window.setEmployeeActive=async(id,active)=>{
   if(!confirm(active?"Activate this employee?":"Deactivate this employee?"))return;
