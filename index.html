@@ -37,8 +37,9 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 <button class="active" data-tab="dashboard">Dashboard</button><button data-tab="sell">Sales</button><button data-tab="stock">Stock</button><button data-tab="products">Products / Import</button><button data-tab="expenses">Expenses</button><button data-tab="history">Sales history</button><button data-tab="reports">Reports</button>
 </nav>
 <section id="dashboard" class="tab">
+<div class="actions" style="margin-bottom:10px"><button class="btn secondary full" id="toggle-financials" type="button">Show financial figures</button></div>
 <div class="grid">
-<div class="metric"><small>Pieces in stock</small><strong id="m-stock">0</strong></div><div class="metric"><small>Potential stock revenue</small><strong id="m-potential">₦0</strong></div><div class="metric"><small>Sales revenue</small><strong id="m-revenue">₦0</strong></div><div class="metric"><small>Gross profit</small><strong id="m-profit">₦0</strong></div><div class="metric"><small>Pieces sold</small><strong id="m-sold">0</strong></div><div class="metric"><small>Expenses</small><strong id="m-expenses">₦0</strong></div><div class="metric"><small>Net profit</small><strong id="m-net">₦0</strong></div>
+<div class="metric"><small>Pieces in stock</small><strong id="m-stock">0</strong></div><div class="metric"><small>Potential stock revenue</small><strong id="m-potential" class="financial-value">₦0</strong></div><div class="metric"><small>Sales revenue</small><strong id="m-revenue" class="financial-value">₦0</strong></div><div class="metric"><small>Gross profit</small><strong id="m-profit" class="financial-value">₦0</strong></div><div class="metric"><small>Pieces sold</small><strong id="m-sold">0</strong></div><div class="metric"><small>Expenses</small><strong id="m-expenses" class="financial-value">₦0</strong></div><div class="metric"><small>Net profit</small><strong id="m-net" class="financial-value">₦0</strong></div>
 </div><p class="muted">Potential stock revenue is an estimate, not money already received.</p>
 <div class="panel"><h2>Inventory by product</h2><div id="dash-products"></div></div><div class="panel"><h2>Today at a glance</h2><div id="today-summary" class="muted"></div></div>
 <div class="actions"><button class="btn secondary" id="export">Export sales CSV</button><button class="btn secondary" id="backup">Download full POS backup (JSON)</button></div>
@@ -58,6 +59,9 @@ const SUPABASE_URL="https://phajdfjseqmklxzbqrsi.supabase.co";
 const SUPABASE_KEY="sb_publishable_knTvwis7W-vzRppAgxgDRg_Vh4DIhlx";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let data={stock:[],sales:[],expenses:[]},selected=null,scanner=null;
+let financialVisible=false;
+function applyFinancialVisibility(){document.querySelectorAll(".financial-value").forEach(el=>{if(el.textContent!=="••••••")el.dataset.raw=el.textContent;el.textContent=financialVisible?(el.dataset.raw||"₦0"):"••••••"});const b=$("toggle-financials");if(b)b.textContent=financialVisible?"Hide financial figures":"Show financial figures"}
+$("toggle-financials").onclick=()=>{financialVisible=!financialVisible;applyFinancialVisibility()};
 const $=id=>document.getElementById(id), money=n=>"₦"+Number(n||0).toLocaleString("en-NG");
 const safe=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const today=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
@@ -91,6 +95,7 @@ function render(){
  $("expense-list").innerHTML=data.expenses.slice(0,50).map(e=>`<div class="sale"><div><b>${safe(e.category)} · ${money(e.amount)}</b><div class="muted">${dateWAT(e.incurred_at)} · ${safe(e.description)}</div></div><button class="btn danger" data-delete-expense="${safe(e.id)}">Delete</button></div>`).join("")||"No expenses recorded.";
  document.querySelectorAll("[data-delete-sale]").forEach(b=>b.onclick=()=>deleteSale(b.dataset.deleteSale));
  document.querySelectorAll("[data-delete-expense]").forEach(b=>b.onclick=()=>deleteExpense(b.dataset.deleteExpense));
+ applyFinancialVisibility();
 }
 function findCode(code){selected=data.stock.find(x=>String(x.code).toUpperCase()===code.trim().toUpperCase());if(!selected){$("found").classList.add("hidden");$("scan-message").textContent="Barcode not found. Check the code or label.";return}$("found-name").textContent=selected.product_name+" — "+selected.colour;$("found-detail").textContent=`${selected.size_label} · ${selected.qty} pieces remaining · ${selected.code} · Cost ${money(selected.cost)}`;$("qty").value=1;$("qty").max=selected.qty;$("found").classList.remove("hidden");$("scan-message").textContent="";updateTotal()}
 function updateTotal(){$("sale-total").textContent=money(Math.max(0,Number($("qty").value)||0)*(selected?.price||0))}
