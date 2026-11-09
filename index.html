@@ -61,8 +61,9 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let data={stock:[],sales:[],expenses:[]},selected=null,scanner=null;
 let financialVisible=false;
 const $=id=>document.getElementById(id), money=n=>"₦"+Number(n||0).toLocaleString("en-NG");
-function applyFinancialVisibility(){document.querySelectorAll(".financial-value").forEach(el=>{if(el.textContent!=="••••••")el.dataset.raw=el.textContent;el.textContent=financialVisible?(el.dataset.raw||"₦0"):"••••••"});const b=$("toggle-financials");if(b)b.textContent=financialVisible?"Hide financial figures":"Show financial figures"}
-$("toggle-financials").onclick=()=>{financialVisible=!financialVisible;applyFinancialVisibility()};
+function applyFinancialVisibility(){document.querySelectorAll(".financial-value").forEach(el=>{if(el.textContent!=="••••••")el.dataset.raw=el.textContent;el.textContent=financialVisible?(el.dataset.raw||"₦0"):"••••••"});const b=$("toggle-financials");if(b){b.textContent=financialVisible?"Hide financial figures":"Show financial figures";b.setAttribute("aria-pressed",String(financialVisible))}}
+// Delegate the tap/click from the document so the control remains responsive on mobile.
+document.addEventListener("click",event=>{const button=event.target.closest("#toggle-financials");if(!button)return;event.preventDefault();financialVisible=!financialVisible;applyFinancialVisibility()});
 const safe=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const today=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
 const dateWAT=v=>v?new Intl.DateTimeFormat("en-NG",{timeZone:"Africa/Lagos",dateStyle:"medium",timeStyle:"short"}).format(new Date(v)):"";
